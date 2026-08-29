@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown briefly by Android before the Flutter engine attaches and the
+     in-app Splash screen (lib/features/auth/splash_screen.dart) takes
+     over. Uses the same deep-navy brand color to avoid any visible flash. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/eyra_deep_navy" />
+</layer-list>

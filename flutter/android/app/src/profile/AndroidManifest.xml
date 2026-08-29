@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The INTERNET permission is required only for Flutter's profiling
+         tooling. It is NOT present in the main (release) manifest, since
+         Eyra has no cloud or network features. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
