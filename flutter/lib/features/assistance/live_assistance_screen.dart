@@ -1,9 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/models/obstacle.dart';
-import '../../core/state/device_controller.dart';
+import '../../core/state/assistance_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -22,7 +23,6 @@ class LiveAssistanceScreen extends StatefulWidget {
 
 class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
     with SingleTickerProviderStateMixin {
-  Timer? _mockTimer;
   late final AnimationController _pulseController;
 
   @override
@@ -33,29 +33,27 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // Periodically cycle through example detections to simulate a
-    // changing environment. Purely local/mock - no camera or AI involved.
-    _mockTimer = Timer.periodic(const Duration(seconds: 4), (_) {
-      DeviceController.of(context).cycleMockDetection();
-    });
+    // Detections now stream in from AssistanceController (backed by
+    // ObstacleDetectionService), so this screen no longer needs to own
+    // a polling Timer itself - that responsibility moved to the mock
+    // detection service, matching where a real detector would live.
   }
 
   @override
   void dispose() {
-    _mockTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
 
   void _stop() {
-    DeviceController.of(context).stopAssistance();
+    unawaited(AssistanceController.of(context).stopAssistance());
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final device = context.watch<DeviceController>();
-    final obstacle = device.latestObstacle;
+    final assistance = context.watch<AssistanceController>();
+    final obstacle = assistance.latestObstacle;
 
     return WillPopScope(
       onWillPop: () async {

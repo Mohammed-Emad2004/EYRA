@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/state/setup_controller.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_logo.dart';
 import '../../core/widgets/eyra_primary_button.dart';
@@ -33,7 +36,10 @@ class WelcomeScreen extends StatelessWidget {
               const Spacer(),
               EyraPrimaryButton(
                 label: context.tr('continueLabel'),
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.pairGlasses),
+                onPressed: () {
+                  unawaited(SetupController.of(context).markWelcomePassed());
+                  Navigator.of(context).pushNamed(AppRoutes.pairGlasses);
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
             ],

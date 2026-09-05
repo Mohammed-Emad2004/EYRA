@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/state/assistance_controller.dart';
+import '../../core/state/auth_controller.dart';
 import '../../core/state/device_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -24,7 +28,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final device = context.watch<DeviceController>();
-    final isReady = device.isSystemReady;
+    final assistance = context.watch<AssistanceController>();
+    final isReady = device.isSystemReady && assistance.isDetectorReady;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -67,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                   StatusIndicator(label: context.tr('audio'), status: device.audioStatus),
                   StatusIndicator(
                     label: context.tr('ai'),
-                    status: device.aiReady ? ConnectionStatus.connected : ConnectionStatus.disconnected,
+                    status: assistance.isDetectorReady ? ConnectionStatus.connected : ConnectionStatus.disconnected,
                   ),
                 ],
               ),
@@ -78,16 +83,17 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.play_arrow_rounded,
               onPressed: isReady
                   ? () {
-                      device.startAssistance();
+                      final userId = AuthController.of(context).currentUser?.id ?? 'mock-user';
+                      unawaited(assistance.startAssistance(userId: userId));
                       Navigator.of(context).pushNamed(AppRoutes.liveAssistance);
                     }
                   : null,
             ),
-            if (!device.isAssistanceActive && device.latestObstacle != null) ...[
+            if (!assistance.isAssistanceActive && assistance.latestObstacle != null) ...[
               const SizedBox(height: AppSpacing.xl),
               Text('Last Detected', style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: AppSpacing.xs),
-              ObstacleCard(obstacle: device.latestObstacle!),
+              ObstacleCard(obstacle: assistance.latestObstacle!),
             ],
           ],
         ),

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
+import '../../core/state/setup_controller.dart';
 import 'widgets/onboarding_connect_step.dart';
 
 class ConnectAudioScreen extends StatelessWidget {
@@ -14,7 +17,10 @@ class ConnectAudioScreen extends StatelessWidget {
       icon: Icons.headphones_outlined,
       deviceName: 'Bluetooth Audio',
       continueLabel: 'Continue',
-      onContinue: () => Navigator.of(context).pushNamed(AppRoutes.testCamera),
+      onContinue: () {
+        unawaited(SetupController.of(context).markAudioConnected());
+        Navigator.of(context).pushNamed(AppRoutes.testCamera);
+      },
     );
   }
 }

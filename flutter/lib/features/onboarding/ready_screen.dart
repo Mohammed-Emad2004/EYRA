@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/state/auth_controller.dart';
+import '../../core/state/setup_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -85,6 +87,7 @@ class ReadyScreen extends StatelessWidget {
                 label: context.tr('startUsingEyra'),
                 onPressed: () {
                   AuthController.of(context).completeOnboarding();
+                  unawaited(SetupController.of(context).markReady());
                   Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
                 },
               ),

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
+import '../../core/state/setup_controller.dart';
 import 'widgets/onboarding_connect_step.dart';
 
 /// Simulates a camera readiness check. The real device camera is never
@@ -16,7 +19,10 @@ class TestCameraScreen extends StatelessWidget {
       icon: Icons.camera_alt_outlined,
       deviceName: 'Camera',
       continueLabel: 'Continue',
-      onContinue: () => Navigator.of(context).pushNamed(AppRoutes.onboardingReady),
+      onContinue: () {
+        unawaited(SetupController.of(context).markCameraTested());
+        Navigator.of(context).pushNamed(AppRoutes.onboardingReady);
+      },
     );
   }
 }

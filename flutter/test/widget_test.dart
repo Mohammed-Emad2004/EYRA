@@ -5,12 +5,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:eyra/app/app.dart';
 import 'package:eyra/core/state/app_settings_controller.dart';
+import 'package:eyra/core/state/assistance_controller.dart';
 import 'package:eyra/core/state/auth_controller.dart';
 import 'package:eyra/core/state/device_controller.dart';
+import 'package:eyra/core/state/setup_controller.dart';
+import 'package:eyra/core/state/telemetry_controller.dart';
 import 'package:eyra/core/widgets/eyra_logo.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  List<ChangeNotifierProvider> buildControllerProviders(AppSettingsController settingsController) {
+    return [
+      ChangeNotifierProvider.value(value: settingsController),
+      ChangeNotifierProvider(create: (_) => AuthController()),
+      ChangeNotifierProvider(create: (_) => DeviceController()),
+      ChangeNotifierProvider(create: (_) => AssistanceController()),
+      ChangeNotifierProvider(create: (_) => SetupController()),
+      ChangeNotifierProvider(create: (_) => TelemetryController()),
+    ];
+  }
 
   Future<Widget> buildTestApp() async {
     // Avoid touching real platform storage in tests.
@@ -20,11 +34,7 @@ void main() {
     await settingsController.load();
 
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: settingsController),
-        ChangeNotifierProvider(create: (_) => AuthController()),
-        ChangeNotifierProvider(create: (_) => DeviceController()),
-      ],
+      providers: buildControllerProviders(settingsController),
       child: const EyraApp(),
     );
   }
@@ -57,11 +67,7 @@ void main() {
 
     await tester.pumpWidget(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider.value(value: settingsController),
-          ChangeNotifierProvider(create: (_) => AuthController()),
-          ChangeNotifierProvider(create: (_) => DeviceController()),
-        ],
+        providers: buildControllerProviders(settingsController),
         child: const EyraApp(),
       ),
     );

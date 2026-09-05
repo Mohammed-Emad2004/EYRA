@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/routes.dart';
@@ -200,7 +202,7 @@ class _AlertFrequencyRow extends StatelessWidget {
             underline: const SizedBox.shrink(),
             style: Theme.of(context).textTheme.bodyLarge,
             onChanged: (value) {
-              if (value != null) settings.setAlertFrequency(value);
+              if (value != null) unawaited(settings.setAlertFrequency(value));
             },
             items: AlertFrequency.values
                 .map((f) => DropdownMenuItem(value: f, child: Text(f.label)))

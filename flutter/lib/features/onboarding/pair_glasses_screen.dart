@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
+import '../../core/state/setup_controller.dart';
 import 'widgets/onboarding_connect_step.dart';
 
 class PairGlassesScreen extends StatelessWidget {
@@ -14,7 +17,10 @@ class PairGlassesScreen extends StatelessWidget {
       icon: Icons.visibility_outlined,
       deviceName: 'ESP32-S3',
       continueLabel: 'Continue',
-      onContinue: () => Navigator.of(context).pushNamed(AppRoutes.connectAudio),
+      onContinue: () {
+        unawaited(SetupController.of(context).markGlassesPaired());
+        Navigator.of(context).pushNamed(AppRoutes.connectAudio);
+      },
     );
   }
 }
