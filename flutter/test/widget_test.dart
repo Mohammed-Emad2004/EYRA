@@ -7,6 +7,7 @@ import 'package:eyra/app/app.dart';
 import 'package:eyra/core/state/app_settings_controller.dart';
 import 'package:eyra/core/state/assistance_controller.dart';
 import 'package:eyra/core/state/auth_controller.dart';
+import 'package:eyra/core/state/camera_controller.dart';
 import 'package:eyra/core/state/device_controller.dart';
 import 'package:eyra/core/state/setup_controller.dart';
 import 'package:eyra/core/state/telemetry_controller.dart';
@@ -23,6 +24,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => AssistanceController()),
       ChangeNotifierProvider(create: (_) => SetupController()),
       ChangeNotifierProvider(create: (_) => TelemetryController()),
+      ChangeNotifierProvider(create: (_) => EyraCameraController()),
     ];
   }
 

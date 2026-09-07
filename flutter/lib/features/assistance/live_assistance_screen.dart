@@ -1,19 +1,26 @@
 import 'dart:async';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/models/obstacle.dart';
 import '../../core/state/assistance_controller.dart';
+import '../../core/state/camera_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_primary_button.dart';
 import '../../core/widgets/obstacle_card.dart';
 
-/// Live Assistance: shows a simple directional visualization of the most
-/// recent mock detection and a "stop" control. Intentionally not a
-/// complex radar or camera dashboard, per product spec.
+/// Live Assistance: shows the real camera feed with a directional
+/// visualization overlay of the most recent detection and a "stop"
+/// control.
+///
+/// The camera feed provides REAL VIDEO INPUT. The obstacle visualization
+/// still comes from [AssistanceController] (backed by
+/// [MockObstacleDetectionService] today). These are intentionally
+/// separate - the camera is real, the detection is mock.
 class LiveAssistanceScreen extends StatefulWidget {
   const LiveAssistanceScreen({super.key});
 
@@ -24,6 +31,7 @@ class LiveAssistanceScreen extends StatefulWidget {
 class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
+  EyraCameraController? _cameraController;
 
   @override
   void initState() {
@@ -33,10 +41,16 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // Detections now stream in from AssistanceController (backed by
-    // ObstacleDetectionService), so this screen no longer needs to own
-    // a polling Timer itself - that responsibility moved to the mock
-    // detection service, matching where a real detector would live.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _cameraController = context.read<EyraCameraController>();
+      _cameraController!.initialize().then((_) {
+        if (!mounted) return;
+        if (_cameraController!.isReady) {
+          _cameraController!.startImageStream();
+        }
+      });
+    });
   }
 
   @override
@@ -45,82 +59,99 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
     super.dispose();
   }
 
-  void _stop() {
-    unawaited(AssistanceController.of(context).stopAssistance());
-    Navigator.of(context).pop();
+  Future<void> _stop() async {
+    final cam = _cameraController;
+    if (cam == null) return;
+    await cam.stopImageStream();
+    if (mounted) {
+      unawaited(AssistanceController.of(context).stopAssistance());
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final assistance = context.watch<AssistanceController>();
     final obstacle = assistance.latestObstacle;
+    final cameraState = context.watch<EyraCameraController>();
 
     return WillPopScope(
       onWillPop: () async {
-        _stop();
+        await _stop();
         return false;
       },
       child: Scaffold(
+        backgroundColor: AppColors.deepNavy,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) => Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.cyan.withOpacity(0.4 + _pulseController.value * 0.6),
-                        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) => Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.cyan
+                            .withValues(alpha: 0.4 + _pulseController.value * 0.6),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      context.tr('assistanceActive'),
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.cyan),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    context.tr('assistanceActive'),
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: AppColors.cyan),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Center(
+                child: Text(
+                  context.tr('monitoringEnvironment'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: _CameraWithOverlay(
+                    cameraState: cameraState,
+                    obstacle: obstacle,
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (obstacle != null) ...[
+                      ObstacleCard(obstacle: obstacle),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    EyraPrimaryButton(
+                      label: context.tr('stopAssistance'),
+                      icon: Icons.stop_rounded,
+                      backgroundColor: AppColors.error,
+                      foregroundColor: AppColors.textPrimary,
+                      onPressed: _stop,
                     ),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Center(
-                  child: Text(
-                    context.tr('monitoringEnvironment'),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Expanded(
-                  child: Center(
-                    child: obstacle == null
-                        ? Text(
-                            'No obstacle detected',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          )
-                        : _DirectionVisualizer(obstacle: obstacle),
-                  ),
-                ),
-                if (obstacle != null) ...[
-                  ObstacleCard(obstacle: obstacle),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-                EyraPrimaryButton(
-                  label: context.tr('stopAssistance'),
-                  icon: Icons.stop_rounded,
-                  backgroundColor: AppColors.error,
-                  foregroundColor: AppColors.textPrimary,
-                  onPressed: _stop,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -128,72 +159,141 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
   }
 }
 
-/// Simple LEFT / CENTER / RIGHT lane visualization highlighting which
-/// lane the current mock obstacle is in.
-class _DirectionVisualizer extends StatelessWidget {
-  final Obstacle obstacle;
+/// Stacks the real camera preview with the mock obstacle direction
+/// overlay on top.
+class _CameraWithOverlay extends StatelessWidget {
+  final EyraCameraController cameraState;
+  final Obstacle? obstacle;
 
-  const _DirectionVisualizer({required this.obstacle});
+  const _CameraWithOverlay({required this.cameraState, this.obstacle});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: Direction.values.map((d) {
-            final isActive = d == obstacle.direction;
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-                child: Column(
-                  children: [
-                    Text(
-                      d.label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: isActive ? AppColors.brightCyan : AppColors.textMuted,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Container(
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.cyan.withOpacity(0.14) : AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: isActive ? AppColors.cyan : AppColors.divider,
-                          width: isActive ? 2 : 1,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: isActive
-                          ? Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(_iconFor(obstacle.label), color: AppColors.brightCyan, size: 30),
-                                const SizedBox(height: AppSpacing.xxs),
-                                Text(
-                                  obstacle.label.toUpperCase(),
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: AppColors.brightCyan,
-                                      ),
-                                ),
-                                Text(
-                                  obstacle.distance.label,
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _buildCameraLayer(context),
+          _buildOverlay(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCameraLayer(BuildContext context) {
+    if (cameraState.state == CameraState.ready) {
+      final controller = cameraState.flutterController;
+      if (controller != null && controller.value.isInitialized) {
+        return CameraPreview(controller);
+      }
+    }
+
+    return Container(
+      color: AppColors.surface,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              cameraState.state == CameraState.error
+                  ? Icons.error_outline_rounded
+                  : Icons.videocam_off_rounded,
+              size: 40,
+              color: cameraState.state == CameraState.error
+                  ? AppColors.error
+                  : AppColors.textMuted,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _cameraStatusLabel(cameraState.state),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  String _cameraStatusLabel(CameraState state) {
+    switch (state) {
+      case CameraState.uninitialized:
+      case CameraState.initializing:
+        return 'Camera initializing...';
+      case CameraState.permissionRequired:
+        return 'Camera permission required';
+      case CameraState.ready:
+        return 'Camera ready';
+      case CameraState.error:
+        return 'Camera unavailable';
+    }
+  }
+
+  Widget _buildOverlay(BuildContext context) {
+    final currentObstacle = obstacle;
+    if (currentObstacle == null) {
+      return Positioned(
+        bottom: AppSpacing.sm,
+        left: 0,
+        right: 0,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.deepNavy.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Text(
+              'No obstacle detected',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Positioned(
+      bottom: AppSpacing.sm,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.deepNavy.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(color: AppColors.cyan.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_iconFor(currentObstacle.label),
+                  color: AppColors.brightCyan, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                '${currentObstacle.label} - ${currentObstacle.direction.label} - ${currentObstacle.distance.label}',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: AppColors.textPrimary),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
