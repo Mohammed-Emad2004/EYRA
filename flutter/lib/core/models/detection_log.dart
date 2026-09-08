@@ -1,59 +1,78 @@
 import 'obstacle.dart';
 
+enum DangerLevel { low, medium, high }
+
+extension DangerLevelValue on DangerLevel {
+  String get value => name;
+
+  static DangerLevel fromValue(String? value) {
+    switch (value) {
+      case 'medium':
+        return DangerLevel.medium;
+      case 'high':
+        return DangerLevel.high;
+      default:
+        return DangerLevel.low;
+    }
+  }
+}
+
 /// Domain model for a single obstacle-detection record.
 ///
 /// Maps to the `Detection Logs` table in the backend ERD.
 ///
 /// Database mapping (see ERD `Detection Logs` table):
-/// - `log_id`          -> [id]
+/// - `log_id`          -> [logId]
 /// - `session_id`      -> [sessionId]
-/// - `detection_type`  -> [detectionType]. ENUM values not legible in the
-///   ERD - kept as a raw string.
-/// - (detected object column) -> [detectedLabel]. AMBIGUOUS: rendered in
-///   the ERD as "detected_lade..." - read here as "detected_label",
-///   requires confirmation.
+/// - `detected_label`  -> [detectedLabel]
+/// - `spatial_direction` -> [spatialDirection]
+/// - `danger_level`     -> [dangerLevel]
+/// - `audio_spoken_text` -> [audioSpokenText]
 /// - `created_at`      -> [createdAt]
 ///
-/// AMBIGUOUS SCHEMA FIELDS (see architecture notes for full detail):
-/// The ERD shows two additional `DECIMAL(5,4)` columns on this table
-/// (rendered illegibly as roughly "session_ta" and "session_w") that do
-/// not clearly correspond to any single named concept. The current
-/// product needs a confidence score plus categorical direction/distance
-/// (see [Direction], [Distance] in `obstacle.dart`, which this refactor
-/// was explicitly told to keep). Rather than guess which illegible ERD
-/// column is which, this model:
-///   - keeps [confidence] as a product-required field, tentatively
-///     associated with one of the two illegible columns;
-///   - keeps [direction] and [distance] as the existing categorical
-///     enums the UI already renders, since no clearly-named
-///     direction/distance column is visible in the ERD at all; and
-///   - preserves the two illegible columns verbatim as
-///     [rawAmbiguousValueA] / [rawAmbiguousValueB] so no information is
-///     silently discarded, pending schema confirmation.
 class DetectionLog {
-  final String id;
+  final String logId;
   final String sessionId;
-  final String detectionType;
   final String detectedLabel;
-  final Direction direction;
-  final Distance distance;
-  final double? confidence;
-  final double? rawAmbiguousValueA;
-  final double? rawAmbiguousValueB;
-  final DateTime? createdAt;
+  final SpatialDirection spatialDirection;
+  final DangerLevel dangerLevel;
+  final String? audioSpokenText;
+  final DateTime createdAt;
 
   const DetectionLog({
-    required this.id,
+    required this.logId,
     required this.sessionId,
     required this.detectedLabel,
-    required this.direction,
-    required this.distance,
-    this.detectionType = 'obstacle',
-    this.confidence,
-    this.rawAmbiguousValueA,
-    this.rawAmbiguousValueB,
-    this.createdAt,
+    required this.spatialDirection,
+    required this.dangerLevel,
+    this.audioSpokenText,
+    required this.createdAt,
   });
+
+  factory DetectionLog.fromJson(Map<String, dynamic> json) {
+    return DetectionLog(
+      logId: json['log_id']?.toString() ?? '',
+      sessionId: json['session_id']?.toString() ?? '',
+      detectedLabel: json['detected_label'] as String? ?? '',
+      spatialDirection: SpatialDirection.values.firstWhere(
+        (value) => value.name == json['spatial_direction'],
+        orElse: () => SpatialDirection.center,
+      ),
+      dangerLevel: DangerLevelValue.fromValue(json['danger_level'] as String?),
+      audioSpokenText: json['audio_spoken_text'] as String?,
+      createdAt: DateTime.parse(json['created_at'].toString()),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'log_id': logId,
+        'session_id': sessionId,
+        'detected_label': detectedLabel,
+        'spatial_direction': spatialDirection.name,
+        'danger_level': dangerLevel.value,
+        'audio_spoken_text': audioSpokenText,
+        'created_at': createdAt.toIso8601String(),
+      };
 
   /// Converts to the existing [Obstacle] UI model, so screens built
   /// against [Obstacle] (Home, Live Assistance, ObstacleCard) keep
@@ -61,9 +80,12 @@ class DetectionLog {
   Obstacle toObstacle() {
     return Obstacle(
       label: detectedLabel,
-      confidence: confidence ?? 0,
-      direction: direction,
-      distance: distance,
+      direction: spatialDirection,
+      distance: switch (dangerLevel) {
+        DangerLevel.low => Distance.far,
+        DangerLevel.medium => Distance.medium,
+        DangerLevel.high => Distance.near,
+      },
     );
   }
 
@@ -77,13 +99,16 @@ class DetectionLog {
     DateTime? createdAt,
   }) {
     return DetectionLog(
-      id: id,
+      logId: id,
       sessionId: sessionId,
       detectedLabel: obstacle.label,
-      direction: obstacle.direction,
-      distance: obstacle.distance,
-      confidence: obstacle.confidence,
-      createdAt: createdAt,
+      spatialDirection: obstacle.direction,
+      dangerLevel: switch (obstacle.distance) {
+        Distance.near => DangerLevel.high,
+        Distance.medium => DangerLevel.medium,
+        Distance.far => DangerLevel.low,
+      },
+      createdAt: createdAt ?? DateTime.now(),
     );
   }
 }

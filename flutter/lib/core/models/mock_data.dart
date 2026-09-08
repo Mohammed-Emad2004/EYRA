@@ -10,21 +10,21 @@ class MockData {
   static const Obstacle carAheadNear = Obstacle(
     label: 'Car',
     confidence: 0.94,
-    direction: Direction.center,
+    direction: SpatialDirection.center,
     distance: Distance.near,
   );
 
   static const Obstacle personLeftFar = Obstacle(
     label: 'Person',
     confidence: 0.91,
-    direction: Direction.left,
+    direction: SpatialDirection.left,
     distance: Distance.far,
   );
 
   static const Obstacle chairRightMedium = Obstacle(
     label: 'Chair',
     confidence: 0.87,
-    direction: Direction.right,
+    direction: SpatialDirection.right,
     distance: Distance.medium,
   );
 

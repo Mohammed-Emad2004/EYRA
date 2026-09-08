@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_logo.dart';
 
@@ -40,8 +39,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: cs.surface,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               Text(
                 context.tr('assistiveVision'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: cs.onSurfaceVariant,
                       letterSpacing: 1.2,
                     ),
               ),

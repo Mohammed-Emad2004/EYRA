@@ -1,17 +1,17 @@
 /// Relative horizontal direction of a detected obstacle.
-enum Direction { left, center, right }
+enum SpatialDirection { left, center, right }
 
 /// Coarse relative distance bucket of a detected obstacle.
 enum Distance { near, medium, far }
 
-extension DirectionLabel on Direction {
+extension SpatialDirectionLabel on SpatialDirection {
   String get label {
     switch (this) {
-      case Direction.left:
+      case SpatialDirection.left:
         return 'LEFT';
-      case Direction.center:
+      case SpatialDirection.center:
         return 'CENTER';
-      case Direction.right:
+      case SpatialDirection.right:
         return 'RIGHT';
     }
   }
@@ -36,13 +36,13 @@ extension DistanceLabel on Distance {
 /// inference happens anywhere in this project.
 class Obstacle {
   final String label;
-  final double confidence;
-  final Direction direction;
+  final double? confidence;
+  final SpatialDirection direction;
   final Distance distance;
 
   const Obstacle({
     required this.label,
-    required this.confidence,
+    this.confidence,
     required this.direction,
     required this.distance,
   });
@@ -50,11 +50,11 @@ class Obstacle {
   /// Short spoken-style summary, e.g. "Car ahead".
   String get spokenSummary {
     switch (direction) {
-      case Direction.center:
+      case SpatialDirection.center:
         return '$label ahead';
-      case Direction.left:
+      case SpatialDirection.left:
         return '$label on your left';
-      case Direction.right:
+      case SpatialDirection.right:
         return '$label on your right';
     }
   }

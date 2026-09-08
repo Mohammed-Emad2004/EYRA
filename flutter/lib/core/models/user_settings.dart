@@ -1,14 +1,34 @@
-/// The two languages Eyra supports. Matches the ERD's
-/// `User Settings.app_language ENUM('ar','en')` exactly.
+/// Theme mode preference. Not a backend schema column — stored locally.
+enum AppThemeMode { light, dark, system }
+
+/// The two languages Eyra supports. Matches the schema's
+/// `language ENUM('en','ar')`.
 enum AppLanguage { english, arabic }
+
+extension AppLanguageValue on AppLanguage {
+  String get value {
+    switch (this) {
+      case AppLanguage.english:
+        return 'en';
+      case AppLanguage.arabic:
+        return 'ar';
+    }
+  }
+
+  static AppLanguage fromValue(String? value) {
+    switch (value) {
+      case 'ar':
+        return AppLanguage.arabic;
+      case 'en':
+      default:
+        return AppLanguage.english;
+    }
+  }
+}
 
 /// How often spoken obstacle alerts should be given.
 ///
-/// APP-LOCAL CONCEPT: this does not correspond to any column visible in
-/// the `User Settings` table in the ERD. It is kept because it is part
-/// of the current, shipping Settings screen and existing product
-/// behavior must not be removed. If the backend later adds a matching
-/// column, [UserSettings.alertFrequency] can be wired to it directly.
+/// Maps to `alert_frequency ENUM('low','normal','high')`.
 enum AlertFrequency { low, normal, high }
 
 extension AlertFrequencyLabel on AlertFrequency {
@@ -26,98 +46,104 @@ extension AlertFrequencyLabel on AlertFrequency {
 
 /// Domain model for a user's settings/preferences.
 ///
-/// Maps to the `User Settings` table in the backend ERD. Fields are
-/// split into two groups:
+/// Maps to the `user_settings` table in the backend schema.
 ///
-/// 1. Backend-mapped fields, corresponding to columns visible in the
-///    ERD's `User Settings` table.
-/// 2. App-local fields, which back the current Settings screen but do
-///    not correspond to any column visible in the ERD. These are kept so
-///    existing product behavior is not removed; they are clearly marked
-///    below and in the architecture notes shipped with this refactor.
-///
-/// Database mapping (see ERD `User Settings` table):
-/// - `app_language`         -> [appLanguage] (ENUM('ar','en') matches exactly)
-/// - `ocr_language`         -> [ocrLanguage]. AMBIGUOUS: the ERD shows this
-///   column's datatype as "FOAT" (garbled "FLOAT"?), which is an unusual
-///   type for a language code. Kept as a raw nullable string pending
-///   confirmation of the real datatype.
-/// - `speech_rate` / `speech_volume` -> [speechRate], [speechVolume].
-///   AMBIGUOUS: the ERD appears to show "speech_volume FLOAT" listed
-///   twice and no clearly separate "speech_rate" row in this table. Both
-///   fields are kept, but which ERD row maps to which requires
-///   confirmation.
-/// - (haptic column)        -> [hapticFeedbackLevel]. AMBIGUOUS: ERD
-///   renders the column name as "haptic_feedback_nl DECIMAL(4,2)" -
-///   likely a feedback intensity/level, but the exact name is illegible.
-/// - (voice range column)   -> [voiceRangeEnabled]. AMBIGUOUS: ERD
-///   renders the column name as "is_voic_rage TINYINT(1)" - read here as
-///   a "voice range" toggle per the product's mention of "voice range",
-///   but requires confirmation.
-/// - `updated_at`           -> [updatedAt]
-///
-/// App-local fields (current Settings screen, not present in the ERD):
-/// - [voiceAlerts], [alertFrequency], [highContrast], [largeText],
-///   [hapticFeedbackEnabled].
+/// Database mapping (`user_settings` table):
+/// - `setting_id`     -> [settingId]
+/// - `user_id`        -> [userId]
+/// - `voice_alerts`   -> [voiceAlerts]
+/// - `alert_frequency` -> [alertFrequency]
+/// - `language`       -> [appLanguage]
+/// - `high_contrast`  -> [highContrast]
+/// - `large_text`     -> [largeText]
+/// - `haptic_feedback` -> [hapticFeedback]
+/// - `updated_at`     -> [updatedAt]
 class UserSettings {
-  // --- Backend-mapped (User Settings table) ---
-  final AppLanguage appLanguage;
-  final String? ocrLanguage;
-  final double? speechRate;
-  final double? speechVolume;
-  final double? hapticFeedbackLevel;
-  final bool? voiceRangeEnabled;
-  final DateTime? updatedAt;
-
-  // --- App-local (existing Settings screen; not present in ERD) ---
+  final String? settingId;
+  final String? userId;
   final bool voiceAlerts;
   final AlertFrequency alertFrequency;
+  final AppLanguage language;
   final bool highContrast;
   final bool largeText;
-  final bool hapticFeedbackEnabled;
+  final bool hapticFeedback;
+  final AppThemeMode themeMode;
+  final DateTime? updatedAt;
 
   const UserSettings({
-    this.appLanguage = AppLanguage.english,
-    this.ocrLanguage,
-    this.speechRate,
-    this.speechVolume,
-    this.hapticFeedbackLevel,
-    this.voiceRangeEnabled,
-    this.updatedAt,
+    this.settingId,
+    this.userId,
     this.voiceAlerts = true,
     this.alertFrequency = AlertFrequency.normal,
+    this.language = AppLanguage.english,
     this.highContrast = false,
     this.largeText = false,
-    this.hapticFeedbackEnabled = true,
+    this.hapticFeedback = true,
+    this.themeMode = AppThemeMode.system,
+    this.updatedAt,
   });
 
   UserSettings copyWith({
-    AppLanguage? appLanguage,
-    String? ocrLanguage,
-    double? speechRate,
-    double? speechVolume,
-    double? hapticFeedbackLevel,
-    bool? voiceRangeEnabled,
-    DateTime? updatedAt,
+    String? settingId,
+    String? userId,
     bool? voiceAlerts,
     AlertFrequency? alertFrequency,
+    AppLanguage? language,
     bool? highContrast,
     bool? largeText,
-    bool? hapticFeedbackEnabled,
+    bool? hapticFeedback,
+    AppThemeMode? themeMode,
+    DateTime? updatedAt,
   }) {
     return UserSettings(
-      appLanguage: appLanguage ?? this.appLanguage,
-      ocrLanguage: ocrLanguage ?? this.ocrLanguage,
-      speechRate: speechRate ?? this.speechRate,
-      speechVolume: speechVolume ?? this.speechVolume,
-      hapticFeedbackLevel: hapticFeedbackLevel ?? this.hapticFeedbackLevel,
-      voiceRangeEnabled: voiceRangeEnabled ?? this.voiceRangeEnabled,
-      updatedAt: updatedAt ?? this.updatedAt,
+      settingId: settingId ?? this.settingId,
+      userId: userId ?? this.userId,
       voiceAlerts: voiceAlerts ?? this.voiceAlerts,
       alertFrequency: alertFrequency ?? this.alertFrequency,
+      language: language ?? this.language,
       highContrast: highContrast ?? this.highContrast,
       largeText: largeText ?? this.largeText,
-      hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
+      hapticFeedback: hapticFeedback ?? this.hapticFeedback,
+      themeMode: themeMode ?? this.themeMode,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  factory UserSettings.fromJson(Map<String, dynamic> json) {
+    return UserSettings(
+      settingId: json['setting_id']?.toString(),
+      userId: json['user_id']?.toString(),
+      voiceAlerts: json['voice_alerts'] as bool? ?? true,
+      alertFrequency: AlertFrequency.values.firstWhere(
+        (f) => f.name == json['alert_frequency'],
+        orElse: () => AlertFrequency.normal,
+      ),
+      language: AppLanguageValue.fromValue(json['language'] as String?),
+      highContrast: json['high_contrast'] as bool? ?? false,
+      largeText: json['large_text'] as bool? ?? false,
+      hapticFeedback: json['haptic_feedback'] as bool? ?? true,
+      themeMode: AppThemeMode.values.firstWhere(
+        (m) => m.name == json['theme_mode'],
+        orElse: () => AppThemeMode.system,
+      ),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'setting_id': settingId,
+      'user_id': userId,
+      'voice_alerts': voiceAlerts,
+      'alert_frequency': alertFrequency.name,
+      'language': language.value,
+      'high_contrast': highContrast,
+      'large_text': largeText,
+      'haptic_feedback': hapticFeedback,
+      'theme_mode': themeMode.name,
+      'updated_at': updatedAt?.toIso8601String(),
+    };
   }
 }

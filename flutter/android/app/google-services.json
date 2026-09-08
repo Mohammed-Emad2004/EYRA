@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "837353738902",
+    "project_id": "eyra-e159b",
+    "storage_bucket": "eyra-e159b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837353738902:android:0069539dd54797f75128b7",
+        "android_client_info": {
+          "package_name": "com.example.eyra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACYfV_s6QqZzNMFrt7LaQZSeuP4QAhiO8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837353738902:android:6ae9be1a5a5367345128b7",
+        "android_client_info": {
+          "package_name": "com.eyra.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACYfV_s6QqZzNMFrt7LaQZSeuP4QAhiO8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

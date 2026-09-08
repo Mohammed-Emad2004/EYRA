@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
@@ -25,11 +24,12 @@ class ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       toggled: value,
       label: subtitle == null ? label : '$label. $subtitle',
       child: Material(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -39,12 +39,12 @@ class ToggleRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.divider),
+              border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
             ),
             child: Row(
               children: [
                 if (icon != null) ...[
-                  Icon(icon, color: AppColors.brightCyan, size: 22),
+                  Icon(icon, color: cs.secondary, size: 22),
                   const SizedBox(width: AppSpacing.md),
                 ],
                 Expanded(

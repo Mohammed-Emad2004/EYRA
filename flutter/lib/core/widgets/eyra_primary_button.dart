@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
@@ -28,7 +27,10 @@ class EyraPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final disabled = onPressed == null || isLoading;
+    final bgColor = backgroundColor ?? cs.secondary;
+    final fgColor = foregroundColor ?? cs.onSecondary;
 
     return Semantics(
       button: true,
@@ -40,9 +42,9 @@ class EyraPrimaryButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: disabled ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor ?? AppColors.cyan,
-            foregroundColor: foregroundColor ?? AppColors.deepNavy,
-            disabledBackgroundColor: (backgroundColor ?? AppColors.cyan).withOpacity(0.4),
+            backgroundColor: bgColor,
+            foregroundColor: fgColor,
+            disabledBackgroundColor: bgColor.withValues(alpha: 0.4),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
           ),
           child: isLoading
@@ -51,9 +53,7 @@ class EyraPrimaryButton extends StatelessWidget {
                   width: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.6,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      foregroundColor ?? AppColors.deepNavy,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(fgColor),
                   ),
                 )
               : Row(
@@ -69,7 +69,7 @@ class EyraPrimaryButton extends StatelessWidget {
                         label,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: foregroundColor ?? AppColors.deepNavy,
+                              color: fgColor,
                             ),
                       ),
                     ),

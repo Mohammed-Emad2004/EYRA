@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/l10n/app_strings.dart';
-import '../../core/theme/app_colors.dart';
 import '../devices/devices_screen.dart';
 import '../settings/settings_screen.dart';
 import 'home_screen.dart';
@@ -26,7 +25,6 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,

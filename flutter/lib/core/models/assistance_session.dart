@@ -3,13 +3,38 @@
 /// Maps to the `Assistance Sessions` table in the backend ERD.
 ///
 /// Database mapping (see ERD `Assistance Sessions` table):
-/// - `session_id`              -> [id]
+enum SessionStatus { active, stopped }
+
+enum AiStatus { ready, processing, error }
+
+extension SessionStatusValue on SessionStatus {
+  String get value => name;
+
+  static SessionStatus fromValue(String? value) {
+    return value == 'stopped' ? SessionStatus.stopped : SessionStatus.active;
+  }
+}
+
+extension AiStatusValue on AiStatus {
+  String get value => name;
+
+  static AiStatus fromValue(String? value) {
+    switch (value) {
+      case 'processing':
+        return AiStatus.processing;
+      case 'error':
+        return AiStatus.error;
+      default:
+        return AiStatus.ready;
+    }
+  }
+}
+
+/// - `session_id`              -> [sessionId]
 /// - `user_id`                 -> [userId]
-/// - `camera_device_id`        -> [cameraDeviceId]
-/// - `session_mode`            -> [sessionMode]. ENUM values not legible
-///   in the ERD - kept as a raw string.
-/// - `session_status`          -> [sessionStatus]. Same as above - ENUM
-///   values not legible, kept as a raw string.
+/// - `session_status`          -> [sessionStatus]
+/// - `ai_status`               -> [aiStatus]
+/// - `started_at`              -> [startedAt]
 /// - `ended_at`                -> [endedAt]
 /// - `start_latitude`          -> [startLatitude]
 /// - `start_longitude`         -> [startLongitude]
@@ -32,66 +57,58 @@
 /// Per product requirements, no real GPS is collected; latitude/longitude
 /// fields are always mock/placeholder values for now.
 class AssistanceSession {
-  final String id;
+  final String sessionId;
   final String userId;
-  final String? cameraDeviceId;
-  final String sessionMode;
-  final String sessionStatus;
-  final DateTime? startedAt;
+  final SessionStatus sessionStatus;
+  final AiStatus aiStatus;
+  final DateTime startedAt;
   final DateTime? endedAt;
-  final double? startLatitude;
-  final double? startLongitude;
-  final double? endLatitude;
-  final double? endLongitude;
-  final int totalFramesProcessed;
-  final int totalDetectionsCount;
-  final double averageFps;
-  final double averageLatencyMs;
 
   const AssistanceSession({
-    required this.id,
+    required this.sessionId,
     required this.userId,
-    this.cameraDeviceId,
-    this.sessionMode = 'assist',
-    this.sessionStatus = 'active',
-    this.startedAt,
+    this.sessionStatus = SessionStatus.active,
+    this.aiStatus = AiStatus.ready,
+    required this.startedAt,
     this.endedAt,
-    this.startLatitude,
-    this.startLongitude,
-    this.endLatitude,
-    this.endLongitude,
-    this.totalFramesProcessed = 0,
-    this.totalDetectionsCount = 0,
-    this.averageFps = 0,
-    this.averageLatencyMs = 0,
   });
 
+  factory AssistanceSession.fromJson(Map<String, dynamic> json) {
+    return AssistanceSession(
+      sessionId: json['session_id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      sessionStatus:
+          SessionStatusValue.fromValue(json['session_status'] as String?),
+      aiStatus: AiStatusValue.fromValue(json['ai_status'] as String?),
+      startedAt: DateTime.parse(json['started_at'].toString()),
+      endedAt: json['ended_at'] == null
+          ? null
+          : DateTime.tryParse(json['ended_at'].toString()),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'session_id': sessionId,
+        'user_id': userId,
+        'session_status': sessionStatus.value,
+        'ai_status': aiStatus.value,
+        'started_at': startedAt.toIso8601String(),
+        'ended_at': endedAt?.toIso8601String(),
+      };
+
   AssistanceSession copyWith({
-    String? sessionStatus,
+    SessionStatus? sessionStatus,
+    AiStatus? aiStatus,
+    DateTime? startedAt,
     DateTime? endedAt,
-    double? endLatitude,
-    double? endLongitude,
-    int? totalFramesProcessed,
-    int? totalDetectionsCount,
-    double? averageFps,
-    double? averageLatencyMs,
   }) {
     return AssistanceSession(
-      id: id,
+      sessionId: sessionId,
       userId: userId,
-      cameraDeviceId: cameraDeviceId,
-      sessionMode: sessionMode,
       sessionStatus: sessionStatus ?? this.sessionStatus,
-      startedAt: startedAt,
+      aiStatus: aiStatus ?? this.aiStatus,
+      startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
-      startLatitude: startLatitude,
-      startLongitude: startLongitude,
-      endLatitude: endLatitude ?? this.endLatitude,
-      endLongitude: endLongitude ?? this.endLongitude,
-      totalFramesProcessed: totalFramesProcessed ?? this.totalFramesProcessed,
-      totalDetectionsCount: totalDetectionsCount ?? this.totalDetectionsCount,
-      averageFps: averageFps ?? this.averageFps,
-      averageLatencyMs: averageLatencyMs ?? this.averageLatencyMs,
     );
   }
 }

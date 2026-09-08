@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 /// High-level connection status shared by all mock hardware components
 /// (glasses, camera, audio).
@@ -32,16 +31,18 @@ extension ConnectionStatusMeta on ConnectionStatus {
     }
   }
 
-  Color get color {
+  /// Theme-aware color. Pass [context] to resolve from the current theme.
+  Color colorOf(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     switch (this) {
       case ConnectionStatus.connected:
-        return AppColors.success;
+        return cs.tertiary;
       case ConnectionStatus.connecting:
-        return AppColors.cyan;
+        return cs.secondary;
       case ConnectionStatus.disconnected:
-        return AppColors.textMuted;
+        return cs.onSurfaceVariant;
       case ConnectionStatus.error:
-        return AppColors.error;
+        return cs.error;
     }
   }
 }

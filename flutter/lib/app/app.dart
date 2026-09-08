@@ -17,22 +17,31 @@ class EyraApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettingsController>();
 
+    final themeMode = switch (settings.themeMode) {
+      AppThemeMode.light => ThemeMode.light,
+      AppThemeMode.dark => ThemeMode.dark,
+      AppThemeMode.system => ThemeMode.system,
+    };
+
     return Directionality(
       textDirection: settings.textDirection,
       child: MaterialApp(
         title: 'Eyra',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.build(
+        theme: AppTheme.buildLight(
           highContrast: settings.highContrast,
           largeText: settings.largeText,
         ),
+        darkTheme: AppTheme.buildDark(
+          highContrast: settings.highContrast,
+          largeText: settings.largeText,
+        ),
+        themeMode: themeMode,
         locale: settings.locale,
         supportedLocales: const [Locale('en'), Locale('ar')],
         initialRoute: AppRoutes.splash,
         onGenerateRoute: AppRouter.onGenerateRoute,
         builder: (context, child) {
-          // Respect the user's own OS text-scale preference on top of the
-          // "Large Text" setting, but clamp it to avoid destructive overflow.
           final mediaQuery = MediaQuery.of(context);
           final clampedScaler = mediaQuery.textScaler.clamp(
             minScaleFactor: 0.9,

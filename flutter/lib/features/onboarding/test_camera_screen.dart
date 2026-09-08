@@ -59,9 +59,7 @@ class _TestCameraScreenState extends State<TestCameraScreen> {
                       const Spacer(),
                       Text(
                         'STEP 3 OF 3',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: AppColors.textMuted,
-                            ),
+                        style: Theme.of(context).textTheme.labelMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -91,12 +89,12 @@ class _TestCameraScreenState extends State<TestCameraScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(_statusIcon(cameraState.state),
-                                size: 18, color: _statusColor(cameraState.state)),
+                                size: 18, color: _statusColor(cameraState.state, context)),
                             const SizedBox(width: AppSpacing.xxs),
                             Text(
                               _statusLabel(cameraState.state),
                               style: TextStyle(
-                                color: _statusColor(cameraState.state),
+                                color: _statusColor(cameraState.state, context),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -135,17 +133,18 @@ class _TestCameraScreenState extends State<TestCameraScreen> {
     }
   }
 
-  Color _statusColor(CameraState state) {
+  Color _statusColor(CameraState state, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     switch (state) {
       case CameraState.uninitialized:
       case CameraState.initializing:
-        return AppColors.cyan;
+        return cs.secondary;
       case CameraState.permissionRequired:
-        return AppColors.warning;
+        return AppColors.warningOf(context);
       case CameraState.ready:
-        return AppColors.success;
+        return cs.tertiary;
       case CameraState.error:
-        return AppColors.error;
+        return cs.error;
     }
   }
 
@@ -200,6 +199,7 @@ class _CameraPreviewArea extends StatelessWidget {
 
   Widget _buildPreview(BuildContext context) {
     final controller = cameraState.flutterController;
+    final cs = Theme.of(context).colorScheme;
     if (controller == null ||
         !controller.value.isInitialized ||
         controller.value.previewSize == null) {
@@ -215,7 +215,7 @@ class _CameraPreviewArea extends StatelessWidget {
       height: 140,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.brightCyan, width: 2),
+        border: Border.all(color: cs.secondary, width: 2),
       ),
       clipBehavior: Clip.antiAlias,
       child: ClipOval(
@@ -232,6 +232,7 @@ class _CameraPreviewArea extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(BuildContext context, {required IconData icon, required String label}) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -243,24 +244,24 @@ class _CameraPreviewArea extends StatelessWidget {
             children: [
               if (cameraState.state == CameraState.initializing ||
                   cameraState.state == CameraState.uninitialized)
-                const SizedBox(
+                SizedBox(
                   width: 140,
                   height: 140,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.cyan),
-                    backgroundColor: AppColors.divider,
+                    valueColor: AlwaysStoppedAnimation<Color>(cs.secondary),
+                    backgroundColor: Theme.of(context).dividerTheme.color ?? cs.outline,
                   ),
                 ),
               Container(
                 width: 108,
                 height: 108,
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: cs.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.divider),
+                  border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
                 ),
-                child: Icon(icon, size: 46, color: AppColors.brightCyan),
+                child: Icon(icon, size: 46, color: cs.secondary),
               ),
             ],
           ),
@@ -270,7 +271,7 @@ class _CameraPreviewArea extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: cs.onSurfaceVariant,
               ),
         ),
       ],

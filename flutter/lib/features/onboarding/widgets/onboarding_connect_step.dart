@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/system_status.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/eyra_primary_button.dart';
 
@@ -64,7 +63,7 @@ class _OnboardingConnectStepState extends State<OnboardingConnectStep> {
                       const Spacer(),
                       Text(
                         widget.stepLabel,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.textMuted),
+                        style: Theme.of(context).textTheme.labelMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -93,9 +92,9 @@ class _OnboardingConnectStepState extends State<OnboardingConnectStep> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(_status.icon, size: 18, color: _status.color),
+                            Icon(_status.icon, size: 18, color: _status.colorOf(context)),
                             const SizedBox(width: AppSpacing.xxs),
-                            Text(_status.label, style: TextStyle(color: _status.color, fontWeight: FontWeight.w600)),
+                            Text(_status.label, style: TextStyle(color: _status.colorOf(context), fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -126,6 +125,7 @@ class _ConnectVisual extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final connecting = status == ConnectionStatus.connecting;
+    final cs = Theme.of(context).colorScheme;
 
     return SizedBox(
       width: 140,
@@ -139,19 +139,19 @@ class _ConnectVisual extends StatelessWidget {
               height: 140,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.cyan),
-                backgroundColor: AppColors.divider,
+                valueColor: AlwaysStoppedAnimation<Color>(cs.secondary),
+                backgroundColor: Theme.of(context).dividerTheme.color ?? cs.outline,
               ),
             ),
           Container(
             width: 108,
             height: 108,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: cs.surface,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.divider),
+              border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
             ),
-            child: Icon(icon, size: 46, color: AppColors.brightCyan),
+            child: Icon(icon, size: 46, color: cs.secondary),
           ),
         ],
       ),

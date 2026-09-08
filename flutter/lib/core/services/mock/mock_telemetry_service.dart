@@ -11,21 +11,13 @@ class MockTelemetryService implements TelemetryService {
   Future<DeveloperTelemetry> getLatestTelemetry() async {
     await Future.delayed(const Duration(milliseconds: 200));
     return DeveloperTelemetry(
-      userId: 'mock-user',
-      recordedAt: DateTime.now(),
-      ocrLanguage: 'en',
-      speechRate: 1.0,
-      speechPitch: 1.0,
-      speechVolume: 0.8,
-      ttsVoiceGender: 'neutral',
-      hapticPercentage: 60,
-      usagePercentage: 42,
-      droppedScans: false,
-      networkLatencyMs: MockData.networkMs,
+      telemetryId: 'mock-telemetry',
+      sessionId: 'mock-session',
       fps: MockData.fps,
-      inferenceMs: MockData.inferenceMs,
-      totalLatencyMs: MockData.totalLatencyMs,
-      modelName: MockData.modelName,
+      inferenceLatencyMs: MockData.inferenceMs,
+      cpuUsagePct: 42,
+      ramUsageMb: 256,
+      recordedAt: DateTime.now(),
     );
   }
 }

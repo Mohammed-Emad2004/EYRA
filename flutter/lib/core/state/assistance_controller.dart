@@ -55,10 +55,9 @@ class AssistanceController extends ChangeNotifier {
     return Provider.of<AssistanceController>(context, listen: listen);
   }
 
-  Future<void> startAssistance({required String userId, String? cameraDeviceId}) async {
+  Future<void> startAssistance({required String userId}) async {
     _currentSession = await _assistanceService.startSession(
       userId: userId,
-      cameraDeviceId: cameraDeviceId,
     );
     _isAssistanceActive = true;
     _detectionService.start();
@@ -72,7 +71,7 @@ class AssistanceController extends ChangeNotifier {
     _currentSession = null;
     notifyListeners();
     if (session != null) {
-      await _assistanceService.stopSession(session.id);
+      await _assistanceService.stopSession(session.sessionId);
     }
   }
 

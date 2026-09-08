@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/state/auth_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_primary_button.dart';
 import '../../core/widgets/eyra_secondary_button.dart';
@@ -93,11 +92,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildSuccess(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.mark_email_read_outlined, color: AppColors.brightCyan, size: 72),
+        Icon(Icons.mark_email_read_outlined, color: cs.secondary, size: 72),
         const SizedBox(height: AppSpacing.lg),
         Text(
           context.tr('checkYourEmail'),

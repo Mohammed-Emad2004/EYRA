@@ -12,7 +12,6 @@ import '../models/assistance_session.dart';
 abstract class AssistanceService {
   Future<AssistanceSession> startSession({
     required String userId,
-    String? cameraDeviceId,
   });
 
   Future<void> stopSession(String sessionId);

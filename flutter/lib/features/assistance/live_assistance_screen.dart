@@ -7,7 +7,6 @@ import '../../core/l10n/app_strings.dart';
 import '../../core/models/obstacle.dart';
 import '../../core/state/assistance_controller.dart';
 import '../../core/state/camera_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_primary_button.dart';
@@ -74,14 +73,16 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
     final assistance = context.watch<AssistanceController>();
     final obstacle = assistance.latestObstacle;
     final cameraState = context.watch<EyraCameraController>();
+    final cs = Theme.of(context).colorScheme;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
         await _stop();
-        return false;
       },
       child: Scaffold(
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: cs.surface,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,7 +98,7 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
                       height: 10,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.cyan
+                        color: cs.secondary
                             .withValues(alpha: 0.4 + _pulseController.value * 0.6),
                       ),
                     ),
@@ -108,7 +109,7 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
                     style: Theme.of(context)
                         .textTheme
                         .labelLarge
-                        ?.copyWith(color: AppColors.cyan),
+                        ?.copyWith(color: cs.secondary),
                   ),
                 ],
               ),
@@ -143,8 +144,8 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
                     EyraPrimaryButton(
                       label: context.tr('stopAssistance'),
                       icon: Icons.stop_rounded,
-                      backgroundColor: AppColors.error,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: cs.error,
+                      foregroundColor: cs.onError,
                       onPressed: _stop,
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -182,6 +183,7 @@ class _CameraWithOverlay extends StatelessWidget {
   }
 
   Widget _buildCameraLayer(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     if (cameraState.state == CameraState.ready) {
       final controller = cameraState.flutterController;
       if (controller != null && controller.value.isInitialized) {
@@ -190,7 +192,7 @@ class _CameraWithOverlay extends StatelessWidget {
     }
 
     return Container(
-      color: AppColors.surface,
+      color: cs.surfaceContainerHighest,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -201,8 +203,8 @@ class _CameraWithOverlay extends StatelessWidget {
                   : Icons.videocam_off_rounded,
               size: 40,
               color: cameraState.state == CameraState.error
-                  ? AppColors.error
-                  : AppColors.textMuted,
+                  ? cs.error
+                  : cs.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -210,7 +212,7 @@ class _CameraWithOverlay extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
-                  ?.copyWith(color: AppColors.textSecondary),
+                  ?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -234,6 +236,7 @@ class _CameraWithOverlay extends StatelessWidget {
   }
 
   Widget _buildOverlay(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final currentObstacle = obstacle;
     if (currentObstacle == null) {
       return Positioned(
@@ -247,7 +250,7 @@ class _CameraWithOverlay extends StatelessWidget {
               vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: AppColors.deepNavy.withValues(alpha: 0.7),
+              color: cs.surface.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Text(
@@ -255,7 +258,7 @@ class _CameraWithOverlay extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
-                  ?.copyWith(color: AppColors.textSecondary),
+                  ?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
         ),
@@ -273,22 +276,22 @@ class _CameraWithOverlay extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: AppColors.deepNavy.withValues(alpha: 0.7),
+            color: cs.surface.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(color: AppColors.cyan.withValues(alpha: 0.5)),
+            border: Border.all(color: cs.secondary.withValues(alpha: 0.5)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(_iconFor(currentObstacle.label),
-                  color: AppColors.brightCyan, size: 20),
+                  color: cs.secondary, size: 20),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 '${currentObstacle.label} - ${currentObstacle.direction.label} - ${currentObstacle.distance.label}',
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
-                    ?.copyWith(color: AppColors.textPrimary),
+                    ?.copyWith(color: cs.onSurface),
               ),
             ],
           ),

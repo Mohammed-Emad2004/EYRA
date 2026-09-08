@@ -1,70 +1,128 @@
-import 'system_status.dart';
+enum DeviceConnectionStatus { connected, disconnected }
 
-/// Domain model for a paired hardware device (e.g. the Eyra smart
-/// glasses / ESP32-S3 unit).
+extension DeviceConnectionStatusValue on DeviceConnectionStatus {
+  String get value => name;
+
+  static DeviceConnectionStatus fromValue(String? value) {
+    return value == 'connected'
+        ? DeviceConnectionStatus.connected
+        : DeviceConnectionStatus.disconnected;
+  }
+}
+
+/// Strongly typed device key matching the schema's
+/// `device_key ENUM('smart_glasses','esp32_s3','camera','bluetooth_audio')`.
+enum DeviceKey {
+  smartGlasses,
+  esp32S3,
+  camera,
+  bluetoothAudio;
+
+  String get value {
+    switch (this) {
+      case DeviceKey.smartGlasses:
+        return 'smart_glasses';
+      case DeviceKey.esp32S3:
+        return 'esp32_s3';
+      case DeviceKey.camera:
+        return 'camera';
+      case DeviceKey.bluetoothAudio:
+        return 'bluetooth_audio';
+    }
+  }
+
+  static DeviceKey fromValue(String? value) {
+    switch (value) {
+      case 'smart_glasses':
+        return DeviceKey.smartGlasses;
+      case 'esp32_s3':
+        return DeviceKey.esp32S3;
+      case 'camera':
+        return DeviceKey.camera;
+      case 'bluetooth_audio':
+        return DeviceKey.bluetoothAudio;
+      default:
+        return DeviceKey.smartGlasses;
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case DeviceKey.smartGlasses:
+        return 'Smart Glasses';
+      case DeviceKey.esp32S3:
+        return 'ESP32-S3';
+      case DeviceKey.camera:
+        return 'Camera';
+      case DeviceKey.bluetoothAudio:
+        return 'Bluetooth Audio';
+    }
+  }
+}
+
+/// Domain model for a paired hardware device.
 ///
-/// Maps to the `devices` table in the backend ERD.
+/// Maps to the `devices` table in the backend schema.
 ///
-/// Database mapping (see ERD `devices` table):
-/// - `device_id`            -> [id]
-/// - `user_id`              -> [userId]
-/// - `device_name`          -> [name]
-/// - `device_type`          -> [deviceType]. ENUM values not legible in
-///   the ERD - kept as a raw string rather than a typed Dart enum.
-/// - `connection_protocol`  -> [connectionProtocol]. Same as above -
-///   ENUM values not legible, kept as a raw string.
-/// - `serial_number`        -> [serialNumber]
-/// - `mac_address`          -> [macAddress]
-/// - `ip_address`           -> [ipAddress]
-/// - `stream_endpoint_url`  -> [streamEndpointUrl]
-/// - `usb_vendor_id`        -> [usbVendorId]
-/// - `firmware_version`     -> [firmwareVersion]
-/// - `battery_level`        -> [batteryLevel]
-/// - `is_charging`          -> [isCharging]
-/// - `signal_strength_rssi` -> [signalStrengthRssi]
-/// - `last_heartbeat_at`    -> [lastHeartbeatAt]
-/// - `created_at`           -> [createdAt]
-///
-/// [connectionStatus] is NOT a database column - it is a UI-facing
-/// convenience derived by the service/mock layer from heartbeat
-/// freshness/RSSI, so screens can keep using the existing
-/// [ConnectionStatus] enum without reaching into raw telemetry fields.
+/// Database mapping (`devices` table):
+/// - `device_id`         -> [id]
+/// - `user_id`           -> [userId]
+/// - `device_name`       -> [deviceName]
+/// - `device_key`        -> [deviceKey]
+/// - `connection_status` -> [connectionStatus]
+/// - `battery_percentage` -> [batteryPercentage]
+/// - `last_tested_at`    -> [lastTestedAt]
+/// - `updated_at`        -> [updatedAt]
 class Device {
-  final String id;
+  final String deviceId;
   final String userId;
-  final String name;
-  final String deviceType;
-  final String connectionProtocol;
-  final String? serialNumber;
-  final String? macAddress;
-  final String? ipAddress;
-  final String? streamEndpointUrl;
-  final String? usbVendorId;
-  final String? firmwareVersion;
-  final int? batteryLevel;
-  final bool isCharging;
-  final int? signalStrengthRssi;
-  final DateTime? lastHeartbeatAt;
-  final DateTime? createdAt;
-  final ConnectionStatus connectionStatus;
+  final String deviceName;
+  final DeviceKey deviceKey;
+  final DeviceConnectionStatus connectionStatus;
+  final int? batteryPercentage;
+  final DateTime? lastTestedAt;
+  final DateTime? updatedAt;
 
   const Device({
-    required this.id,
+    required this.deviceId,
     required this.userId,
-    required this.name,
-    required this.deviceType,
-    required this.connectionProtocol,
-    this.serialNumber,
-    this.macAddress,
-    this.ipAddress,
-    this.streamEndpointUrl,
-    this.usbVendorId,
-    this.firmwareVersion,
-    this.batteryLevel,
-    this.isCharging = false,
-    this.signalStrengthRssi,
-    this.lastHeartbeatAt,
-    this.createdAt,
-    this.connectionStatus = ConnectionStatus.disconnected,
+    required this.deviceName,
+    required this.deviceKey,
+    this.connectionStatus = DeviceConnectionStatus.disconnected,
+    this.batteryPercentage,
+    this.lastTestedAt,
+    this.updatedAt,
   });
+
+  factory Device.fromJson(Map<String, dynamic> json) {
+    return Device(
+      deviceId: json['device_id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      deviceName: json['device_name'] as String? ?? '',
+      deviceKey: DeviceKey.fromValue(json['device_key'] as String?),
+      connectionStatus: DeviceConnectionStatusValue.fromValue(
+        json['connection_status'] as String?,
+      ),
+      batteryPercentage: (json['battery_percentage'] as num?)?.toInt(),
+      lastTestedAt: json['last_tested_at'] != null
+          ? DateTime.tryParse(json['last_tested_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'device_id': deviceId,
+      'user_id': userId,
+      'device_name': deviceName,
+      'device_key': deviceKey.value,
+      'connection_status': connectionStatus.value,
+      'battery_percentage': batteryPercentage,
+      'last_tested_at': lastTestedAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
 }

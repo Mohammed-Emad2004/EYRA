@@ -17,20 +17,13 @@ class MockAssistanceService implements AssistanceService {
   @override
   Future<AssistanceSession> startSession({
     required String userId,
-    String? cameraDeviceId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
     _sessionCounter++;
     final session = AssistanceSession(
-      id: 'mock-session-$_sessionCounter',
+      sessionId: 'mock-session-$_sessionCounter',
       userId: userId,
-      cameraDeviceId: cameraDeviceId,
-      sessionMode: 'assist',
-      sessionStatus: 'active',
       startedAt: DateTime.now(),
-      // No real GPS is collected; these are fixed example coordinates.
-      startLatitude: 0,
-      startLongitude: 0,
     );
     _current = session;
     return session;
@@ -39,7 +32,7 @@ class MockAssistanceService implements AssistanceService {
   @override
   Future<void> stopSession(String sessionId) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    if (_current?.id == sessionId) {
+    if (_current?.sessionId == sessionId) {
       _current = null;
     }
   }

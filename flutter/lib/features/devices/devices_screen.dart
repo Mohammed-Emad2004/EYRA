@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_strings.dart';
-import '../../core/models/system_status.dart';
 import '../../core/state/device_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/connection_card.dart';
 import '../../core/widgets/eyra_secondary_button.dart';

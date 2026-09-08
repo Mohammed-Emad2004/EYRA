@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/models/developer_telemetry.dart';
 import '../../core/state/device_controller.dart';
 import '../../core/state/telemetry_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/obstacle_card.dart';
@@ -38,6 +37,7 @@ class _DeveloperMonitorScreenState extends State<DeveloperMonitorScreen> {
     final device = context.watch<DeviceController>();
     final telemetryController = context.watch<TelemetryController>();
     final telemetry = telemetryController.telemetry;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Developer Monitor')),
@@ -57,13 +57,15 @@ class _DeveloperMonitorScreenState extends State<DeveloperMonitorScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.1),
+                        color: cs.tertiaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: AppColors.warning.withOpacity(0.4)),
+                        border: Border.all(
+                            color: cs.tertiaryContainer),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.science_outlined, color: AppColors.warning),
+                          Icon(Icons.science_outlined,
+                              color: cs.tertiary),
                           const SizedBox(width: AppSpacing.xs),
                           Expanded(
                             child: Text(
@@ -74,53 +76,55 @@ class _DeveloperMonitorScreenState extends State<DeveloperMonitorScreen> {
                         ],
                       ),
                     ),
-
                     const SectionHeader(title: 'Performance'),
                     _MetricsGrid(telemetry: telemetry),
-
                     const SectionHeader(title: 'Model'),
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: cs.surface,
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: AppColors.divider),
+                        border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.model_training_outlined, color: AppColors.brightCyan),
+                          Icon(Icons.model_training_outlined,
+                              color: cs.secondary),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            telemetry.modelName ?? 'Unknown',
+                            'Live metrics',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
                       ),
                     ),
-
                     const SectionHeader(title: 'Example Detections'),
                     ...telemetryController.sampleDetections.map(
                       (log) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: ObstacleCard(obstacle: log.toObstacle(), showConfidence: true),
+                        child: ObstacleCard(
+                            obstacle: log.toObstacle(), showConfidence: true),
                       ),
                     ),
-
                     const SectionHeader(title: 'System'),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: cs.surface,
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: AppColors.divider),
+                        border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
                       ),
                       child: Wrap(
                         spacing: AppSpacing.lg,
                         runSpacing: AppSpacing.xs,
                         children: [
-                          StatusIndicator(label: 'ESP32', status: device.glassesStatus),
-                          StatusIndicator(label: 'Camera', status: device.cameraStatus),
-                          StatusIndicator(label: 'Audio', status: device.audioStatus),
+                          StatusIndicator(
+                              label: 'ESP32', status: device.glassesStatus),
+                          StatusIndicator(
+                              label: 'Camera', status: device.cameraStatus),
+                          StatusIndicator(
+                              label: 'Audio', status: device.audioStatus),
                         ],
                       ),
                     ),
@@ -145,10 +149,10 @@ class _MetricsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = [
-      ('FPS', telemetry.fps?.toStringAsFixed(1) ?? '—'),
-      ('Inference', telemetry.inferenceMs != null ? '${telemetry.inferenceMs} ms' : '—'),
-      ('Network', telemetry.networkLatencyMs != null ? '${telemetry.networkLatencyMs} ms' : '—'),
-      ('Total latency', telemetry.totalLatencyMs != null ? '${telemetry.totalLatencyMs} ms' : '—'),
+      ('FPS', telemetry.fps.toStringAsFixed(1)),
+      ('Inference', '${telemetry.inferenceLatencyMs} ms'),
+      ('CPU', '${telemetry.cpuUsagePct.toStringAsFixed(1)}%'),
+      ('RAM', '${telemetry.ramUsageMb.toStringAsFixed(1)} MB'),
     ];
 
     return GridView.count(
@@ -163,9 +167,9 @@ class _MetricsGrid extends StatelessWidget {
             (m) => Container(
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.divider),
+                border: Border.all(color: Theme.of(context).dividerTheme.color ?? Theme.of(context).colorScheme.outline),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

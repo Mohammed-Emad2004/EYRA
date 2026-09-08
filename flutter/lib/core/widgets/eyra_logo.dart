@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 /// Renders the official Eyra brand asset with an optional subtle cyan
 /// ambient glow behind it. The source image itself is never modified,
@@ -25,6 +24,7 @@ class EyraLogo extends StatelessWidget {
 
     if (!withGlow) return image;
 
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: size * 1.7,
       height: size * 1.7,
@@ -33,8 +33,8 @@ class EyraLogo extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            AppColors.cyanGlow,
-            AppColors.cyanGlow.withOpacity(0.0),
+            cs.secondary.withValues(alpha: 0.3),
+            cs.secondary.withValues(alpha: 0.0),
           ],
         ),
       ),

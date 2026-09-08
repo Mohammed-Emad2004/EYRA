@@ -118,6 +118,10 @@ class AppStrings {
     'highContrast': {AppLanguage.english: 'High Contrast', AppLanguage.arabic: 'التباين العالي'},
     'largeText': {AppLanguage.english: 'Large Text', AppLanguage.arabic: 'نص كبير'},
     'hapticFeedback': {AppLanguage.english: 'Haptic Feedback', AppLanguage.arabic: 'الاهتزاز'},
+    'theme': {AppLanguage.english: 'Theme', AppLanguage.arabic: 'المظهر'},
+    'themeLight': {AppLanguage.english: 'Light', AppLanguage.arabic: 'فاتح'},
+    'themeDark': {AppLanguage.english: 'Dark', AppLanguage.arabic: 'داكن'},
+    'themeSystem': {AppLanguage.english: 'System', AppLanguage.arabic: 'النظام'},
     'logOut': {AppLanguage.english: 'Log out', AppLanguage.arabic: 'تسجيل الخروج'},
     'about': {AppLanguage.english: 'About', AppLanguage.arabic: 'حول التطبيق'},
 

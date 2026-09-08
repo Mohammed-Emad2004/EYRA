@@ -1,6 +1,5 @@
 import '../../models/device.dart';
 import '../../models/mock_data.dart';
-import '../../models/system_status.dart';
 import '../device_service.dart';
 
 /// Local mock implementation of [DeviceService].
@@ -16,19 +15,14 @@ class MockDeviceService implements DeviceService {
 
   Device _buildMockDevice() {
     return Device(
-      id: _mockDeviceId,
+      deviceId: _mockDeviceId,
       userId: _mockUserId,
-      name: 'Eyra Smart Glasses',
-      deviceType: 'smart_glasses',
-      connectionProtocol: 'wifi',
-      serialNumber: 'EYRA-ESP32S3-0001',
-      firmwareVersion: '1.0.0',
-      batteryLevel: MockData.batteryPercent,
-      isCharging: false,
-      signalStrengthRssi: -52,
-      lastHeartbeatAt: DateTime.now(),
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      connectionStatus: ConnectionStatus.connected,
+      deviceName: 'Eyra Smart Glasses',
+      deviceKey: DeviceKey.esp32S3,
+      batteryPercentage: MockData.batteryPercent,
+      lastTestedAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      connectionStatus: DeviceConnectionStatus.connected,
     );
   }
 

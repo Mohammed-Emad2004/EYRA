@@ -87,7 +87,7 @@ class DeviceController extends ChangeNotifier {
     notifyListeners();
 
     if (_devices.isNotEmpty) {
-      await _deviceService.reconnect(_devices.first.id);
+      await _deviceService.reconnect(_devices.first.deviceId);
       await _refreshDevices();
     }
   }

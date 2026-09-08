@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
@@ -10,27 +9,29 @@ class StatusCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Color accentColor;
+  final Color? accentColor;
 
   const StatusCard({
     super.key,
     required this.icon,
     required this.title,
     this.subtitle,
-    this.accentColor = AppColors.success,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = accentColor ?? cs.tertiary;
     return Semantics(
       label: subtitle == null ? title : '$title. $subtitle',
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg, horizontal: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: accentColor.withOpacity(0.35)),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
         ),
         child: Row(
           children: [
@@ -39,10 +40,10 @@ class StatusCard extends StatelessWidget {
               height: 52,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.14),
+                color: color.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: accentColor, size: 28),
+              child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(

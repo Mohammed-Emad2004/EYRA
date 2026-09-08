@@ -5,7 +5,6 @@ import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/state/auth_controller.dart';
 import '../../core/state/setup_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_primary_button.dart';
@@ -22,6 +21,8 @@ class ReadyScreen extends StatelessWidget {
       ('Local AI', Icons.memory_outlined),
     ];
 
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -32,11 +33,11 @@ class ReadyScreen extends StatelessWidget {
               Container(
                 width: 96,
                 height: 96,
-                decoration: const BoxDecoration(
-                  color: AppColors.success,
+                decoration: BoxDecoration(
+                  color: cs.tertiary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded, color: AppColors.deepNavy, size: 52),
+                child: Icon(Icons.check_rounded, color: cs.onSecondary, size: 52),
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
@@ -55,9 +56,9 @@ class ReadyScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: AppColors.divider),
+                  border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
                 ),
                 child: Column(
                   children: checklist
@@ -68,12 +69,12 @@ class ReadyScreen extends StatelessWidget {
                             label: '${item.$1}, ready',
                             child: Row(
                               children: [
-                                Icon(item.$2, color: AppColors.brightCyan, size: 22),
+                                Icon(item.$2, color: cs.secondary, size: 22),
                                 const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Text(item.$1, style: Theme.of(context).textTheme.bodyLarge),
                                 ),
-                                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 22),
+                                Icon(Icons.check_circle_rounded, color: cs.tertiary, size: 22),
                               ],
                             ),
                           ),

@@ -49,43 +49,43 @@
 /// if the backend later adds matching columns, they can be wired
 /// directly.
 class DeveloperTelemetry {
-  final String? id;
-  final String? sessionId;
-  final String userId;
-  final DateTime? recordedAt;
-  final String? ocrLanguage;
-  final double? speechRate;
-  final double? speechPitch;
-  final double? speechVolume;
-  final String? ttsVoiceGender;
-  final double? hapticPercentage;
-  final double? usagePercentage;
-  final bool? droppedScans;
-  final int? networkLatencyMs;
-
-  // --- App-local (existing Developer Monitor screen; not in ERD) ---
-  final double? fps;
-  final int? inferenceMs;
-  final int? totalLatencyMs;
-  final String? modelName;
+  final String telemetryId;
+  final String sessionId;
+  final double fps;
+  final int inferenceLatencyMs;
+  final double cpuUsagePct;
+  final double ramUsageMb;
+  final DateTime recordedAt;
 
   const DeveloperTelemetry({
-    this.id,
-    this.sessionId,
-    required this.userId,
-    this.recordedAt,
-    this.ocrLanguage,
-    this.speechRate,
-    this.speechPitch,
-    this.speechVolume,
-    this.ttsVoiceGender,
-    this.hapticPercentage,
-    this.usagePercentage,
-    this.droppedScans,
-    this.networkLatencyMs,
-    this.fps,
-    this.inferenceMs,
-    this.totalLatencyMs,
-    this.modelName,
+    required this.telemetryId,
+    required this.sessionId,
+    required this.fps,
+    required this.inferenceLatencyMs,
+    required this.cpuUsagePct,
+    required this.ramUsageMb,
+    required this.recordedAt,
   });
+
+  factory DeveloperTelemetry.fromJson(Map<String, dynamic> json) {
+    return DeveloperTelemetry(
+      telemetryId: json['telemetry_id']?.toString() ?? '',
+      sessionId: json['session_id']?.toString() ?? '',
+      fps: (json['fps'] as num?)?.toDouble() ?? 0,
+      inferenceLatencyMs: (json['inference_latency_ms'] as num?)?.toInt() ?? 0,
+      cpuUsagePct: (json['cpu_usage_pct'] as num?)?.toDouble() ?? 0,
+      ramUsageMb: (json['ram_usage_mb'] as num?)?.toDouble() ?? 0,
+      recordedAt: DateTime.parse(json['recorded_at'].toString()),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'telemetry_id': telemetryId,
+        'session_id': sessionId,
+        'fps': fps,
+        'inference_latency_ms': inferenceLatencyMs,
+        'cpu_usage_pct': cpuUsagePct,
+        'ram_usage_mb': ramUsageMb,
+        'recorded_at': recordedAt.toIso8601String(),
+      };
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/state/auth_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_password_field.dart';
 import '../../core/widgets/eyra_primary_button.dart';
@@ -79,6 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -103,15 +103,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.12),
+                        color: cs.error.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withOpacity(0.4)),
+                        border: Border.all(color: cs.error.withValues(alpha: 0.4)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppColors.error),
+                          Icon(Icons.error_outline, color: cs.error),
                           const SizedBox(width: AppSpacing.xs),
-                          Expanded(child: Text(_formError!, style: const TextStyle(color: AppColors.error))),
+                          Expanded(child: Text(_formError!, style: TextStyle(color: cs.error))),
                         ],
                       ),
                     ),

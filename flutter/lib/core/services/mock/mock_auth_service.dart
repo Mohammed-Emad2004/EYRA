@@ -14,12 +14,10 @@ class MockAuthService implements AuthService {
   Future<User?> login({required String email, required String password}) async {
     await Future.delayed(const Duration(milliseconds: 900));
     return User(
-      id: 'mock-user-${email.hashCode}',
-      fullName: email.split('@').first,
+      userId: 'mock-user-${email.hashCode}',
       email: email,
-      accountStatus: 'active',
-      isEmailVerified: true,
-      lastLoginAt: DateTime.now(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 
@@ -31,12 +29,10 @@ class MockAuthService implements AuthService {
   }) async {
     await Future.delayed(const Duration(milliseconds: 900));
     return User(
-      id: 'mock-user-${email.hashCode}',
-      fullName: fullName,
+      userId: 'mock-user-${email.hashCode}',
       email: email,
-      accountStatus: 'active',
-      isEmailVerified: false,
-      lastLoginAt: DateTime.now(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 

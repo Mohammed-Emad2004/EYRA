@@ -26,11 +26,13 @@ class MockSettingsService implements SettingsService {
   static const _keyHighContrast = 'eyra.highContrast';
   static const _keyLargeText = 'eyra.largeText';
   static const _keyHaptics = 'eyra.haptics';
+  static const _keyThemeMode = 'eyra.themeMode';
 
   @override
   Future<UserSettings> loadSettings() async {
     final languageCode = await _storage.getString(_keyLanguage);
-    final appLanguage = languageCode == 'ar' ? AppLanguage.arabic : AppLanguage.english;
+    final language =
+        languageCode == 'ar' ? AppLanguage.arabic : AppLanguage.english;
 
     final voiceAlerts = await _storage.getBool(_keyVoiceAlerts) ?? true;
 
@@ -42,15 +44,22 @@ class MockSettingsService implements SettingsService {
 
     final highContrast = await _storage.getBool(_keyHighContrast) ?? false;
     final largeText = await _storage.getBool(_keyLargeText) ?? false;
-    final hapticFeedbackEnabled = await _storage.getBool(_keyHaptics) ?? true;
+    final hapticFeedback = await _storage.getBool(_keyHaptics) ?? true;
+
+    final themeModeName = await _storage.getString(_keyThemeMode);
+    final themeMode = AppThemeMode.values.firstWhere(
+      (m) => m.name == themeModeName,
+      orElse: () => AppThemeMode.system,
+    );
 
     return UserSettings(
-      appLanguage: appLanguage,
+      language: language,
       voiceAlerts: voiceAlerts,
       alertFrequency: alertFrequency,
       highContrast: highContrast,
       largeText: largeText,
-      hapticFeedbackEnabled: hapticFeedbackEnabled,
+      hapticFeedback: hapticFeedback,
+      themeMode: themeMode,
     );
   }
 
@@ -58,12 +67,13 @@ class MockSettingsService implements SettingsService {
   Future<void> saveSettings(UserSettings settings) async {
     await _storage.setString(
       _keyLanguage,
-      settings.appLanguage == AppLanguage.arabic ? 'ar' : 'en',
+      settings.language == AppLanguage.arabic ? 'ar' : 'en',
     );
     await _storage.setBool(_keyVoiceAlerts, settings.voiceAlerts);
     await _storage.setString(_keyAlertFrequency, settings.alertFrequency.name);
     await _storage.setBool(_keyHighContrast, settings.highContrast);
     await _storage.setBool(_keyLargeText, settings.largeText);
-    await _storage.setBool(_keyHaptics, settings.hapticFeedbackEnabled);
+    await _storage.setBool(_keyHaptics, settings.hapticFeedback);
+    await _storage.setString(_keyThemeMode, settings.themeMode.name);
   }
 }

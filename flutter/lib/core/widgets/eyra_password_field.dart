@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'eyra_text_field.dart';
 
 /// Password entry field with a visibility toggle and a minimum 48dp
@@ -33,6 +32,7 @@ class _EyraPasswordFieldState extends State<EyraPasswordField> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return EyraTextField(
       label: widget.label,
       controller: widget.controller,
@@ -49,7 +49,7 @@ class _EyraPasswordFieldState extends State<EyraPasswordField> {
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           icon: Icon(
             _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: AppColors.textSecondary,
+            color: cs.onSurfaceVariant,
           ),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),

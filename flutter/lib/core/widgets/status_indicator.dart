@@ -26,7 +26,7 @@ class StatusIndicator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(status.icon, size: dense ? 18 : 20, color: status.color),
+          Icon(status.icon, size: dense ? 18 : 20, color: status.colorOf(context)),
           const SizedBox(width: AppSpacing.xxs),
           Flexible(
             child: Text(

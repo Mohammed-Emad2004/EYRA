@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/l10n/app_strings.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_logo.dart';
@@ -18,6 +17,8 @@ class AboutScreen extends StatelessWidget {
       ('On-device AI', Icons.psychology_outlined),
       ('Text-to-Speech', Icons.record_voice_over_outlined),
     ];
+
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('about'))),
@@ -41,7 +42,7 @@ class AboutScreen extends StatelessWidget {
               Center(
                 child: Text(
                   context.tr('assistiveVision'),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.brightCyan),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: cs.secondary),
                 ),
               ),
               const SectionHeader(title: 'About Eyra'),
@@ -55,9 +56,9 @@ class AboutScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: AppColors.divider),
+                  border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
                 ),
                 child: Column(
                   children: technologies
@@ -66,7 +67,7 @@ class AboutScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                           child: Row(
                             children: [
-                              Icon(t.$2, color: AppColors.brightCyan, size: 22),
+                              Icon(t.$2, color: cs.secondary, size: 22),
                               const SizedBox(width: AppSpacing.sm),
                               Text(t.$1, style: Theme.of(context).textTheme.bodyLarge),
                             ],

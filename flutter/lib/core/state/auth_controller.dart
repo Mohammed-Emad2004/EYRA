@@ -15,7 +15,8 @@ import '../services/mock/mock_auth_service.dart';
 /// implementation of [AuthService] can be passed in instead (e.g. in
 /// `main.dart`) without changing this class or any screen.
 class AuthController extends ChangeNotifier {
-  AuthController({AuthService? authService}) : _authService = authService ?? MockAuthService();
+  AuthController({AuthService? authService})
+      : _authService = authService ?? MockAuthService();
 
   final AuthService _authService;
 
@@ -32,7 +33,7 @@ class AuthController extends ChangeNotifier {
 
   /// Convenience accessor kept for existing UI code that only needs a
   /// display name (derived from [currentUser]).
-  String? get displayName => _currentUser?.fullName;
+  String? get displayName => _currentUser?.email.split('@').first;
 
   static AuthController of(BuildContext context, {bool listen = false}) {
     return Provider.of<AuthController>(context, listen: listen);

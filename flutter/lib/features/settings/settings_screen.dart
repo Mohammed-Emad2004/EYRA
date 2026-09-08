@@ -6,7 +6,6 @@ import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/state/app_settings_controller.dart';
 import '../../core/state/auth_controller.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/section_header.dart';
@@ -18,6 +17,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettingsController>();
+    final theme = Theme.of(context);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -30,7 +30,10 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.tr('settings'), style: Theme.of(context).textTheme.displayMedium),
+            Text(context.tr('settings'), style: theme.textTheme.displayMedium),
+
+            const SectionHeader(title: 'Theme'),
+            _ThemeRow(settings: settings),
 
             const SectionHeader(title: 'Alerts'),
             ToggleRow(
@@ -98,22 +101,116 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
+class _ThemeRow extends StatelessWidget {
+  final AppSettingsController settings;
+  const _ThemeRow({required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.palette_outlined, color: cs.secondary, size: 22),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(context.tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
+          ),
+          _ThemeChoiceChip(
+            label: context.tr('themeLight'),
+            icon: Icons.light_mode_outlined,
+            selected: settings.themeMode == AppThemeMode.light,
+            onTap: () => settings.setThemeMode(AppThemeMode.light),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _ThemeChoiceChip(
+            label: context.tr('themeDark'),
+            icon: Icons.dark_mode_outlined,
+            selected: settings.themeMode == AppThemeMode.dark,
+            onTap: () => settings.setThemeMode(AppThemeMode.dark),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _ThemeChoiceChip(
+            label: context.tr('themeSystem'),
+            icon: Icons.settings_brightness_outlined,
+            selected: settings.themeMode == AppThemeMode.system,
+            onTap: () => settings.setThemeMode(AppThemeMode.system),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeChoiceChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ThemeChoiceChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: selected ? cs.secondary.withValues(alpha: 0.16) : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xs),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: selected ? cs.secondary : (Theme.of(context).dividerTheme.color ?? cs.outline)),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 18,
+              color: selected ? cs.secondary : cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LanguageRow extends StatelessWidget {
   final AppSettingsController settings;
   const _LanguageRow({required this.settings});
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
       ),
       child: Row(
         children: [
-          const Icon(Icons.language_rounded, color: AppColors.brightCyan, size: 22),
+          Icon(Icons.language_rounded, color: cs.secondary, size: 22),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(context.tr('language'), style: Theme.of(context).textTheme.bodyLarge),
@@ -144,12 +241,13 @@ class _LanguageChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
       selected: selected,
       label: label,
       child: Material(
-        color: selected ? AppColors.cyan.withOpacity(0.16) : Colors.transparent,
+        color: selected ? cs.secondary.withValues(alpha: 0.16) : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -159,13 +257,13 @@ class _LanguageChoiceChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: selected ? AppColors.cyan : AppColors.divider),
+              border: Border.all(color: selected ? cs.secondary : (Theme.of(context).dividerTheme.color ?? cs.outline)),
             ),
             alignment: Alignment.center,
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? AppColors.brightCyan : AppColors.textSecondary,
+                color: selected ? cs.secondary : cs.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -182,23 +280,24 @@ class _AlertFrequencyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
       ),
       child: Row(
         children: [
-          const Icon(Icons.tune_rounded, color: AppColors.brightCyan, size: 22),
+          Icon(Icons.tune_rounded, color: cs.secondary, size: 22),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(context.tr('alertFrequency'), style: Theme.of(context).textTheme.bodyLarge),
           ),
           DropdownButton<AlertFrequency>(
             value: settings.alertFrequency,
-            dropdownColor: AppColors.elevatedSurface,
+            dropdownColor: cs.surface,
             underline: const SizedBox.shrink(),
             style: Theme.of(context).textTheme.bodyLarge,
             onChanged: (value) {
@@ -223,11 +322,12 @@ class _NavRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
       label: label,
       child: Material(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -237,14 +337,14 @@ class _NavRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.divider),
+              border: Border.all(color: Theme.of(context).dividerTheme.color ?? cs.outline),
             ),
             child: Row(
               children: [
-                Icon(icon, color: AppColors.brightCyan, size: 22),
+                Icon(icon, color: cs.secondary, size: 22),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyLarge)),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant, size: 20),
               ],
             ),
           ),
@@ -260,11 +360,12 @@ class _LogOutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
       label: context.tr('logOut'),
       child: Material(
-        color: AppColors.error.withOpacity(0.1),
+        color: cs.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -274,17 +375,17 @@ class _LogOutRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.error.withOpacity(0.4)),
+              border: Border.all(color: cs.error.withValues(alpha: 0.4)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+                Icon(Icons.logout_rounded, color: cs.error, size: 22),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   context.tr('logOut'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.error,
+                        color: cs.error,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
