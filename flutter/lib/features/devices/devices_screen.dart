@@ -54,7 +54,9 @@ class DevicesScreen extends StatelessWidget {
             ConnectionCard(
               icon: Icons.battery_charging_full_outlined,
               title: context.tr('battery'),
-              trailingText: '${device.batteryPercent}%',
+              trailingText: device.batteryPercent != null
+                  ? '${device.batteryPercent}%'
+                  : '—',
             ),
             const SectionHeader(title: 'Actions'),
             EyraSecondaryButton(
