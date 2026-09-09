@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Theme mode preference. Not a backend schema column — stored locally.
 enum AppThemeMode { light, dark, system }
 
@@ -145,5 +147,39 @@ class UserSettings {
       'theme_mode': themeMode.name,
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+
+  /// Serializes for Firestore `users/{uid}/settings/profile` document.
+  /// Omits `settingId`, `userId` (path expresses relationship), and
+  /// `themeMode` (local-only preference, never stored in Firestore).
+  Map<String, dynamic> toFirestore() {
+    return {
+      'voice_alerts': voiceAlerts,
+      'alert_frequency': alertFrequency.name,
+      'language': language.value,
+      'high_contrast': highContrast,
+      'large_text': largeText,
+      'haptic_feedback': hapticFeedback,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+  }
+
+  /// Deserializes from a Firestore `users/{uid}/settings/profile` document.
+  /// `themeMode` is NOT read from Firestore — it is loaded separately
+  /// from SharedPreferences (local-only preference).
+  factory UserSettings.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UserSettings(
+      voiceAlerts: data['voice_alerts'] as bool? ?? true,
+      alertFrequency: AlertFrequency.values.firstWhere(
+        (f) => f.name == data['alert_frequency'],
+        orElse: () => AlertFrequency.normal,
+      ),
+      language: AppLanguageValue.fromValue(data['language'] as String?),
+      highContrast: data['high_contrast'] as bool? ?? false,
+      largeText: data['large_text'] as bool? ?? false,
+      hapticFeedback: data['haptic_feedback'] as bool? ?? true,
+      updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
+    );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Domain model for a live-assistance session.
 ///
 /// Maps to the `Assistance Sessions` table in the backend ERD.
@@ -109,6 +111,33 @@ class AssistanceSession {
       aiStatus: aiStatus ?? this.aiStatus,
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
+    );
+  }
+
+  /// Serializes for Firestore `users/{uid}/assistance_sessions/{sessionId}`.
+  /// Omits `sessionId`, `userId` (path expresses relationship).
+  Map<String, dynamic> toFirestore() {
+    return {
+      'session_status': sessionStatus.value,
+      'ai_status': aiStatus.value,
+      'started_at': Timestamp.fromDate(startedAt),
+      'ended_at': endedAt != null ? Timestamp.fromDate(endedAt!) : null,
+    };
+  }
+
+  /// Deserializes from a Firestore assistance_sessions document.
+  /// `sessionId` comes from [doc.id]. `userId` is not stored in
+  /// the document body.
+  factory AssistanceSession.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return AssistanceSession(
+      sessionId: doc.id,
+      userId: '',
+      sessionStatus:
+          SessionStatusValue.fromValue(data['session_status'] as String?),
+      aiStatus: AiStatusValue.fromValue(data['ai_status'] as String?),
+      startedAt: (data['started_at'] as Timestamp).toDate(),
+      endedAt: (data['ended_at'] as Timestamp?)?.toDate(),
     );
   }
 }

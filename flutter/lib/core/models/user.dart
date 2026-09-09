@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Domain model for an Eyra account.
 ///
 /// Maps to the `users` table in the backend schema. The UI and
@@ -43,5 +45,27 @@ class User {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+
+  /// Serializes for Firestore `users/{uid}` document.
+  /// Omits `user_id` — the document ID is the UID.
+  Map<String, dynamic> toFirestore() {
+    return {
+      'email': email,
+      'created_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+  }
+
+  /// Deserializes from a Firestore `users/{uid}` document.
+  /// The UID comes from [doc.id], not the document body.
+  factory User.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return User(
+      userId: doc.id,
+      email: data['email'] as String? ?? '',
+      createdAt: (data['created_at'] as Timestamp?)?.toDate(),
+      updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
+    );
   }
 }

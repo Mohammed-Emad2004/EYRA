@@ -1,0 +1,402 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // Common helpers
+    // ============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated()
+          && request.auth.uid == userId;
+    }
+
+    // ============================================================
+    // Users
+    // ============================================================
+
+    match /users/{userId} {
+
+      // A user can access only their own user document.
+      allow read: if isOwner(userId);
+
+      // User document is created after Firebase Authentication signup.
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll([
+          'email',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+
+      // Users may update their email and updatedAt,
+      // but cannot modify createdAt.
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp;
+
+      allow delete: if isOwner(userId);
+
+
+      // ==========================================================
+      // User Settings
+      // ==========================================================
+
+      match /settings/{documentId} {
+
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && documentId == 'profile'
+          && request.resource.data.keys().hasAll([
+            'voiceAlerts',
+            'alertFrequency',
+            'language',
+            'highContrast',
+            'largeText',
+            'hapticFeedback',
+            'updatedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'voiceAlerts',
+            'alertFrequency',
+            'language',
+            'highContrast',
+            'largeText',
+            'hapticFeedback',
+            'updatedAt'
+          ])
+          && request.resource.data.voiceAlerts is bool
+          && request.resource.data.alertFrequency in [
+            'low',
+            'normal',
+            'high'
+          ]
+          && request.resource.data.language in [
+            'en',
+            'ar'
+          ]
+          && request.resource.data.highContrast is bool
+          && request.resource.data.largeText is bool
+          && request.resource.data.hapticFeedback is bool
+          && request.resource.data.updatedAt is timestamp;
+
+        allow update: if isOwner(userId)
+          && documentId == 'profile'
+          && request.resource.data.keys().hasOnly([
+            'voiceAlerts',
+            'alertFrequency',
+            'language',
+            'highContrast',
+            'largeText',
+            'hapticFeedback',
+            'updatedAt'
+          ])
+          && request.resource.data.voiceAlerts is bool
+          && request.resource.data.alertFrequency in [
+            'low',
+            'normal',
+            'high'
+          ]
+          && request.resource.data.language in [
+            'en',
+            'ar'
+          ]
+          && request.resource.data.highContrast is bool
+          && request.resource.data.largeText is bool
+          && request.resource.data.hapticFeedback is bool
+          && request.resource.data.updatedAt is timestamp;
+
+        allow delete: if isOwner(userId);
+      }
+
+
+      // ==========================================================
+      // Devices
+      // ==========================================================
+
+      match /devices/{deviceId} {
+
+        allow read: if isOwner(userId);
+
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasAll([
+            'deviceName',
+            'deviceKey',
+            'connectionStatus',
+            'batteryPercentage',
+            'lastTestedAt',
+            'updatedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'deviceName',
+            'deviceKey',
+            'connectionStatus',
+            'batteryPercentage',
+            'lastTestedAt',
+            'updatedAt'
+          ])
+          && request.resource.data.deviceName is string
+          && request.resource.data.deviceName.size() > 0
+          && request.resource.data.deviceKey in [
+            'smart_glasses',
+            'esp32_s3',
+            'camera',
+            'bluetooth_audio',
+            'phone'
+          ]
+          && request.resource.data.connectionStatus in [
+            'connected',
+            'disconnected'
+          ]
+          && (
+            request.resource.data.batteryPercentage == null
+            || (
+              request.resource.data.batteryPercentage is int
+              && request.resource.data.batteryPercentage >= 0
+              && request.resource.data.batteryPercentage <= 100
+            )
+          )
+          && (
+            request.resource.data.lastTestedAt == null
+            || request.resource.data.lastTestedAt is timestamp
+          )
+          && request.resource.data.updatedAt is timestamp;
+
+        allow delete: if isOwner(userId);
+      }
+
+
+      // ==========================================================
+      // Assistance Sessions
+      // ==========================================================
+
+      match /assistance_sessions/{sessionId} {
+
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && request.resource.data.keys().hasAll([
+            'sessionStatus',
+            'aiStatus',
+            'startedAt',
+            'endedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'sessionStatus',
+            'aiStatus',
+            'startedAt',
+            'endedAt'
+          ])
+          && request.resource.data.sessionStatus in [
+            'active',
+            'stopped'
+          ]
+          && request.resource.data.aiStatus in [
+            'ready',
+            'processing',
+            'error'
+          ]
+          && request.resource.data.startedAt is timestamp
+          && (
+            request.resource.data.endedAt == null
+            || request.resource.data.endedAt is timestamp
+          );
+
+        allow update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly([
+            'sessionStatus',
+            'aiStatus',
+            'startedAt',
+            'endedAt'
+          ])
+          && request.resource.data.sessionStatus in [
+            'active',
+            'stopped'
+          ]
+          && request.resource.data.aiStatus in [
+            'ready',
+            'processing',
+            'error'
+          ]
+          && request.resource.data.startedAt == resource.data.startedAt
+          && (
+            request.resource.data.endedAt == null
+            || request.resource.data.endedAt is timestamp
+          );
+
+        allow delete: if isOwner(userId);
+
+
+        // ========================================================
+        // Detection Logs
+        // ========================================================
+
+        match /detection_logs/{logId} {
+
+          allow read: if isOwner(userId);
+
+          allow create: if isOwner(userId)
+            && request.resource.data.keys().hasAll([
+              'detectedLabel',
+              'spatialDirection',
+              'dangerLevel',
+              'audioSpokenText',
+              'createdAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'detectedLabel',
+              'spatialDirection',
+              'dangerLevel',
+              'audioSpokenText',
+              'createdAt'
+            ])
+            && request.resource.data.detectedLabel is string
+            && request.resource.data.detectedLabel.size() > 0
+            && request.resource.data.spatialDirection in [
+              'left',
+              'center',
+              'right'
+            ]
+            && request.resource.data.dangerLevel in [
+              'low',
+              'medium',
+              'high'
+            ]
+            && request.resource.data.audioSpokenText is string
+            && request.resource.data.audioSpokenText.size() > 0
+            && request.resource.data.createdAt is timestamp;
+
+          allow update: if isOwner(userId)
+            && request.resource.data.keys().hasOnly([
+              'detectedLabel',
+              'spatialDirection',
+              'dangerLevel',
+              'audioSpokenText',
+              'createdAt'
+            ])
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.detectedLabel is string
+            && request.resource.data.spatialDirection in [
+              'left',
+              'center',
+              'right'
+            ]
+            && request.resource.data.dangerLevel in [
+              'low',
+              'medium',
+              'high'
+            ]
+            && request.resource.data.audioSpokenText is string;
+
+          allow delete: if isOwner(userId);
+        }
+
+
+        // ========================================================
+        // Developer Telemetry
+        // ========================================================
+
+        match /developer_telemetry/{telemetryId} {
+
+          allow read: if isOwner(userId);
+
+          allow create: if isOwner(userId)
+            && request.resource.data.keys().hasAll([
+              'fps',
+              'inferenceLatencyMs',
+              'cpuUsagePct',
+              'ramUsageMb',
+              'recordedAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'fps',
+              'inferenceLatencyMs',
+              'cpuUsagePct',
+              'ramUsageMb',
+              'recordedAt'
+            ])
+            && request.resource.data.fps is number
+            && request.resource.data.fps >= 0
+            && request.resource.data.inferenceLatencyMs is number
+            && request.resource.data.inferenceLatencyMs >= 0
+            && (
+              request.resource.data.cpuUsagePct == null
+              || (
+                request.resource.data.cpuUsagePct is number
+                && request.resource.data.cpuUsagePct >= 0
+                && request.resource.data.cpuUsagePct <= 100
+              )
+            )
+            && (
+              request.resource.data.ramUsageMb == null
+              || (
+                request.resource.data.ramUsageMb is number
+                && request.resource.data.ramUsageMb >= 0
+              )
+            )
+            && request.resource.data.recordedAt is timestamp;
+
+          allow update: if isOwner(userId)
+            && request.resource.data.keys().hasOnly([
+              'fps',
+              'inferenceLatencyMs',
+              'cpuUsagePct',
+              'ramUsageMb',
+              'recordedAt'
+            ])
+            && request.resource.data.recordedAt == resource.data.recordedAt
+            && request.resource.data.fps is number
+            && request.resource.data.fps >= 0
+            && request.resource.data.inferenceLatencyMs is number
+            && request.resource.data.inferenceLatencyMs >= 0
+            && (
+              request.resource.data.cpuUsagePct == null
+              || (
+                request.resource.data.cpuUsagePct is number
+                && request.resource.data.cpuUsagePct >= 0
+                && request.resource.data.cpuUsagePct <= 100
+              )
+            )
+            && (
+              request.resource.data.ramUsageMb == null
+              || (
+                request.resource.data.ramUsageMb is number
+                && request.resource.data.ramUsageMb >= 0
+              )
+            );
+
+          allow delete: if isOwner(userId);
+        }
+      }
+    }
+
+    // ============================================================
+    // Deny everything else
+    // ============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

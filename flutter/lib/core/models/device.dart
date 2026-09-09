@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum DeviceConnectionStatus { connected, disconnected }
 
 extension DeviceConnectionStatusValue on DeviceConnectionStatus {
@@ -124,5 +126,37 @@ class Device {
       'last_tested_at': lastTestedAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+
+  /// Serializes for Firestore `users/{uid}/devices/{deviceId}` document.
+  /// Omits `deviceId`, `userId` (path expresses relationship).
+  Map<String, dynamic> toFirestore() {
+    return {
+      'device_name': deviceName,
+      'device_key': deviceKey.value,
+      'connection_status': connectionStatus.value,
+      'battery_percentage': batteryPercentage,
+      'last_tested_at':
+          lastTestedAt != null ? Timestamp.fromDate(lastTestedAt!) : null,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+  }
+
+  /// Deserializes from a Firestore `users/{uid}/devices/{deviceId}` document.
+  /// [userId] is required because it is not stored in the document body.
+  static Device fromFirestore(DocumentSnapshot doc, {required String userId}) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Device(
+      deviceId: doc.id,
+      userId: userId,
+      deviceName: data['device_name'] as String? ?? '',
+      deviceKey: DeviceKey.fromValue(data['device_key'] as String?),
+      connectionStatus: DeviceConnectionStatusValue.fromValue(
+        data['connection_status'] as String?,
+      ),
+      batteryPercentage: (data['battery_percentage'] as num?)?.toInt(),
+      lastTestedAt: (data['last_tested_at'] as Timestamp?)?.toDate(),
+      updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
+    );
   }
 }

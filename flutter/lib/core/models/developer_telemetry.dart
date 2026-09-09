@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Domain model for developer/diagnostic telemetry, shown on the
 /// Developer Monitor screen.
 ///

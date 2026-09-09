@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'obstacle.dart';
 
 enum DangerLevel { low, medium, high }
@@ -36,7 +38,7 @@ class DetectionLog {
   final String detectedLabel;
   final SpatialDirection spatialDirection;
   final DangerLevel dangerLevel;
-  final String? audioSpokenText;
+  final String audioSpokenText;
   final DateTime createdAt;
 
   const DetectionLog({
@@ -45,7 +47,7 @@ class DetectionLog {
     required this.detectedLabel,
     required this.spatialDirection,
     required this.dangerLevel,
-    this.audioSpokenText,
+    required this.audioSpokenText,
     required this.createdAt,
   });
 
@@ -59,7 +61,7 @@ class DetectionLog {
         orElse: () => SpatialDirection.center,
       ),
       dangerLevel: DangerLevelValue.fromValue(json['danger_level'] as String?),
-      audioSpokenText: json['audio_spoken_text'] as String?,
+      audioSpokenText: json['audio_spoken_text'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'].toString()),
     );
   }
@@ -108,7 +110,44 @@ class DetectionLog {
         Distance.medium => DangerLevel.medium,
         Distance.far => DangerLevel.low,
       },
+      audioSpokenText: obstacle.spokenSummary,
       createdAt: createdAt ?? DateTime.now(),
+    );
+  }
+
+  /// Serializes for Firestore `.../detection_logs/{logId}` document.
+  /// Omits `logId`, `sessionId` (path expresses relationship).
+  Map<String, dynamic> toFirestore() {
+    return {
+      'detected_label': detectedLabel,
+      'spatial_direction': spatialDirection.name,
+      'danger_level': dangerLevel.value,
+      'audio_spoken_text': audioSpokenText,
+      'created_at': Timestamp.fromDate(createdAt),
+    };
+  }
+
+  /// Deserializes from a Firestore detection_logs document.
+  /// `logId` comes from [doc.id]. `sessionId` is not stored in the
+  /// document body — pass it via [sessionId] from the parent path.
+  factory DetectionLog.fromFirestore(
+    DocumentSnapshot doc, {
+    required String sessionId,
+  }) {
+    final data = doc.data() as Map<String, dynamic>;
+    return DetectionLog(
+      logId: doc.id,
+      sessionId: sessionId,
+      detectedLabel: data['detected_label'] as String? ?? '',
+      spatialDirection: SpatialDirection.values.firstWhere(
+        (value) => value.name == data['spatial_direction'],
+        orElse: () => SpatialDirection.center,
+      ),
+      dangerLevel: DangerLevelValue.fromValue(
+        data['danger_level'] as String?,
+      ),
+      audioSpokenText: data['audio_spoken_text'] as String? ?? '',
+      createdAt: (data['created_at'] as Timestamp).toDate(),
     );
   }
 }
