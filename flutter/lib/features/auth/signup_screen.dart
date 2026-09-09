@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/services/firebase/firebase_auth_service.dart';
 import '../../core/state/auth_controller.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_password_field.dart';
@@ -69,6 +70,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+    } on AuthException catch (e) {
+      setState(() => _formError = e.message);
     } catch (_) {
       setState(() => _formError = 'Something went wrong. Please try again.');
     } finally {

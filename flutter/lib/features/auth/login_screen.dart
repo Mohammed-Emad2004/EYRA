@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/services/firebase/firebase_auth_service.dart';
 import '../../core/state/auth_controller.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_logo.dart';
@@ -55,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+    } on AuthException catch (e) {
+      setState(() => _formError = e.message);
     } catch (_) {
       setState(() => _formError = 'Something went wrong. Please try again.');
     } finally {

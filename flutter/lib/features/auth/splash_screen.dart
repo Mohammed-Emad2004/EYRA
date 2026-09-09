@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../app/routes.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/state/auth_controller.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_logo.dart';
 
 /// Full-screen splash: centered logo with a subtle ambient glow and a
-/// minimal fade-in, then navigates to Login using mock auth state.
+/// minimal fade-in, then navigates based on authentication state.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -25,7 +26,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) {
+      if (!mounted) return;
+
+      final authController = AuthController.of(context, listen: false);
+      if (authController.isLoggedIn) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+      } else {
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
     });

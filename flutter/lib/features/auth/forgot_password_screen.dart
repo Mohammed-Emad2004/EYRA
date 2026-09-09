@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/services/firebase/firebase_auth_service.dart';
 import '../../core/state/auth_controller.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/eyra_primary_button.dart';
@@ -19,6 +20,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   bool _isLoading = false;
   bool _isSent = false;
+  String? _formError;
 
   @override
   void dispose() {
@@ -35,13 +37,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isLoading = true);
-    await AuthController.of(context).sendPasswordReset(email: _emailController.text.trim());
-    if (!mounted) return;
     setState(() {
-      _isLoading = false;
-      _isSent = true;
+      _isLoading = true;
+      _formError = null;
     });
+    try {
+      await AuthController.of(context).sendPasswordReset(email: _emailController.text.trim());
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _isSent = true;
+      });
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _formError = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _formError = 'Something went wrong. Please try again.';
+      });
+    }
   }
 
   @override
@@ -58,6 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildForm(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Form(
       key: _formKey,
       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -72,6 +92,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: AppSpacing.xl),
+          if (_formError != null) ...[
+            Semantics(
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: cs.error.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.error.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: cs.error),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(_formError!, style: TextStyle(color: cs.error)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           EyraTextField(
             label: context.tr('email'),
             controller: _emailController,
@@ -79,6 +122,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.email],
             validator: _validateEmail,
+            onChanged: (_) {
+              if (_formError != null) setState(() => _formError = null);
+            },
           ),
           const SizedBox(height: AppSpacing.xl),
           EyraPrimaryButton(

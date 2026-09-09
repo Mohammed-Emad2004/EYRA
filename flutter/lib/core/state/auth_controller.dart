@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/firebase/firebase_auth_service.dart';
 import '../services/mock/mock_auth_service.dart';
 
 /// Authentication & first-run application state.
@@ -16,9 +18,17 @@ import '../services/mock/mock_auth_service.dart';
 /// `main.dart`) without changing this class or any screen.
 class AuthController extends ChangeNotifier {
   AuthController({AuthService? authService})
-      : _authService = authService ?? MockAuthService();
+      : _authService = authService ?? MockAuthService() {
+    if (_authService is FirebaseAuthService) {
+      _authStateSubscription = fb.FirebaseAuth.instance
+          .authStateChanges()
+          .listen(_onAuthStateChanged);
+      _checkInitialAuthState();
+    }
+  }
 
   final AuthService _authService;
+  StreamSubscription<fb.User?>? _authStateSubscription;
 
   bool _isLoggedIn = false;
   bool _hasCompletedOnboarding = false;
@@ -37,6 +47,38 @@ class AuthController extends ChangeNotifier {
 
   static AuthController of(BuildContext context, {bool listen = false}) {
     return Provider.of<AuthController>(context, listen: listen);
+  }
+
+  /// Checks if a Firebase user is already authenticated on app start.
+  void _checkInitialAuthState() {
+    final fbUser = fb.FirebaseAuth.instance.currentUser;
+    if (fbUser != null) {
+      _currentUser = _mapFirebaseUser(fbUser);
+      _isLoggedIn = true;
+      notifyListeners();
+    }
+  }
+
+  /// Handles Firebase auth state changes (sign-in, sign-out, token refresh).
+  void _onAuthStateChanged(fb.User? firebaseUser) {
+    if (firebaseUser == null) {
+      _currentUser = null;
+      _isLoggedIn = false;
+    } else {
+      _currentUser = _mapFirebaseUser(firebaseUser);
+      _isLoggedIn = true;
+    }
+    notifyListeners();
+  }
+
+  /// Maps a Firebase user to our domain [User] model.
+  User _mapFirebaseUser(fb.User firebaseUser) {
+    return User(
+      userId: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      createdAt: firebaseUser.metadata.creationTime,
+      updatedAt: firebaseUser.metadata.lastSignInTime,
+    );
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -73,11 +115,15 @@ class AuthController extends ChangeNotifier {
   }
 
   void logOut() {
-    // Fire-and-forget: today's mock has nothing to await, and logging the
-    // UI out should feel instant. A real AuthService implementation can
-    // still do async cleanup (e.g. revoke a token) without blocking this.
     unawaited(_authService.logOut());
     _isLoggedIn = false;
+    _currentUser = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
   }
 }

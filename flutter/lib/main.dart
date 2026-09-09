@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app/app.dart';
+import 'core/services/firebase/firebase_auth_service.dart';
 import 'core/state/app_settings_controller.dart';
 import 'core/state/assistance_controller.dart';
 import 'core/state/auth_controller.dart';
@@ -25,7 +26,9 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsController),
-        ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(
+          create: (_) => AuthController(authService: FirebaseAuthService()),
+        ),
         ChangeNotifierProvider(create: (_) => DeviceController()),
         ChangeNotifierProvider(create: (_) => AssistanceController()),
         ChangeNotifierProvider(create: (_) => SetupController()),
