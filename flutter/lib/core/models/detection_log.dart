@@ -40,6 +40,9 @@ class DetectionLog {
   final DangerLevel dangerLevel;
   final String audioSpokenText;
   final DateTime createdAt;
+  final List<double>? boundingBox;
+  final bool? _isInFrontZone;
+  final double? confidence;
 
   const DetectionLog({
     required this.logId,
@@ -49,9 +52,21 @@ class DetectionLog {
     required this.dangerLevel,
     required this.audioSpokenText,
     required this.createdAt,
-  });
+    this.boundingBox,
+    bool? isInFrontZone,
+    this.confidence,
+  }) : _isInFrontZone = isInFrontZone;
+
+  /// Whether this detected object entered/intersects the FRONT rectangular zone.
+  bool get isInFrontZone =>
+      _isInFrontZone ?? (spatialDirection == SpatialDirection.center);
 
   factory DetectionLog.fromJson(Map<String, dynamic> json) {
+    final rawBox = json['box'] ?? json['bounding_box'];
+    List<double>? box;
+    if (rawBox is List && rawBox.length >= 4) {
+      box = rawBox.map((e) => (e as num).toDouble()).toList();
+    }
     return DetectionLog(
       logId: json['log_id']?.toString() ?? '',
       sessionId: json['session_id']?.toString() ?? '',
@@ -63,6 +78,9 @@ class DetectionLog {
       dangerLevel: DangerLevelValue.fromValue(json['danger_level'] as String?),
       audioSpokenText: json['audio_spoken_text'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'].toString()),
+      boundingBox: box,
+      isInFrontZone: json['is_in_front_zone'] as bool?,
+      confidence: (json['confidence'] ?? json['conf'] as num?)?.toDouble(),
     );
   }
 
@@ -74,6 +92,9 @@ class DetectionLog {
         'danger_level': dangerLevel.value,
         'audio_spoken_text': audioSpokenText,
         'created_at': createdAt.toIso8601String(),
+        if (boundingBox != null) 'box': boundingBox,
+        'is_in_front_zone': isInFrontZone,
+        if (confidence != null) 'confidence': confidence,
       };
 
   /// Converts to the existing [Obstacle] UI model, so screens built
@@ -88,6 +109,9 @@ class DetectionLog {
         DangerLevel.medium => Distance.medium,
         DangerLevel.high => Distance.near,
       },
+      confidence: confidence,
+      boundingBox: boundingBox,
+      isInFrontZone: isInFrontZone,
     );
   }
 
@@ -99,6 +123,8 @@ class DetectionLog {
     required String id,
     required String sessionId,
     DateTime? createdAt,
+    bool? isInFrontZone,
+    double? confidence,
   }) {
     return DetectionLog(
       logId: id,
@@ -112,6 +138,9 @@ class DetectionLog {
       },
       audioSpokenText: obstacle.spokenSummary,
       createdAt: createdAt ?? DateTime.now(),
+      boundingBox: obstacle.boundingBox,
+      isInFrontZone: isInFrontZone ?? obstacle.isInFrontZone,
+      confidence: confidence ?? obstacle.confidence,
     );
   }
 
@@ -147,7 +176,7 @@ class DetectionLog {
         data['danger_level'] as String?,
       ),
       audioSpokenText: data['audio_spoken_text'] as String? ?? '',
-      createdAt: (data['created_at'] as Timestamp).toDate(),
+      createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 }

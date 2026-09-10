@@ -22,6 +22,9 @@ abstract class ObstacleDetectionService {
   /// example detection at a fixed interval.
   Stream<DetectionLog> get detections;
 
+  /// A stream of detection batches per inference result / frame.
+  Stream<List<DetectionLog>> get batchDetections;
+
   /// Starts a detection session.
   void start();
 

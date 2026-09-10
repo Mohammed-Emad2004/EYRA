@@ -10,9 +10,7 @@ import '../models/assistance_session.dart';
 /// implement this same interface and be swapped in without changing
 /// [AssistanceController] or the Live Assistance screen.
 abstract class AssistanceService {
-  Future<AssistanceSession> startSession({
-    required String userId,
-  });
+  Future<AssistanceSession> startSession();
 
   Future<void> stopSession(String sessionId);
 

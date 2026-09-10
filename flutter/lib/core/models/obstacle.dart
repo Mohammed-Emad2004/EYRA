@@ -39,13 +39,22 @@ class Obstacle {
   final double? confidence;
   final SpatialDirection direction;
   final Distance distance;
+  final List<double>? boundingBox;
+  final bool? _isInFrontZone;
 
   const Obstacle({
     required this.label,
     this.confidence,
     required this.direction,
     required this.distance,
-  });
+    this.boundingBox,
+    bool? isInFrontZone,
+  }) : _isInFrontZone = isInFrontZone;
+
+  /// Whether this obstacle is inside or intersects the user's forward
+  /// rectangular attention zone. Defaults to true when direction is center.
+  bool get isInFrontZone =>
+      _isInFrontZone ?? (direction == SpatialDirection.center);
 
   /// Short spoken-style summary, e.g. "Car ahead".
   String get spokenSummary {

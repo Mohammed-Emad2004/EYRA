@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 
 import '../camera_service.dart';
 
@@ -16,6 +17,7 @@ class FlutterCameraService implements CameraService {
   bool _isInitialized = false;
   bool _isStreaming = false;
   final _imageStreamController = StreamController<CameraImage>.broadcast();
+  int _diagnosticFrameCount = 0;
 
   @override
   bool get isInitialized => _isInitialized;
@@ -79,23 +81,62 @@ class FlutterCameraService implements CameraService {
 
   @override
   Future<void> startImageStream() async {
+    debugPrint(
+      '[DIAGNOSTIC] FlutterCameraService.startImageStream() CALLED '
+      '(service=${identityHashCode(this)}, controller=${identityHashCode(_controller)}, '
+      '_isInitialized=$_isInitialized, _isStreaming=$_isStreaming, '
+      'streamController=${identityHashCode(_imageStreamController)})',
+    );
     if (_controller == null || !_isInitialized) {
+      debugPrint('[DIAGNOSTIC] FlutterCameraService: NOT_INITIALIZED thrown');
       throw CameraException(
         'NOT_INITIALIZED',
         'Camera must be initialized before starting image stream.',
       );
     }
 
-    if (_isStreaming) return;
+    if (_isStreaming) {
+      debugPrint('[DIAGNOSTIC] FlutterCameraService.startImageStream: already streaming, early return');
+      return;
+    }
 
     try {
+      debugPrint('[DIAGNOSTIC] FlutterCameraService: calling _controller!.startImageStream()');
       await _controller!.startImageStream((CameraImage image) {
+        _diagnosticFrameCount++;
+        if (_diagnosticFrameCount == 1) {
+          debugPrint(
+            '[DIAGNOSTIC] FlutterCameraService: FIRST CameraImage received! '
+            'width=${image.width}, height=${image.height}, formatGroup=${image.format.group}, '
+            'formatRaw=${image.format.raw}, planesCount=${image.planes.length}',
+          );
+          for (int i = 0; i < image.planes.length; i++) {
+            debugPrint(
+              '[DIAGNOSTIC]   Plane $i: bytes=${image.planes[i].bytes.length}, '
+              'bytesPerRow=${image.planes[i].bytesPerRow}, '
+              'bytesPerPixel=${image.planes[i].bytesPerPixel}',
+            );
+          }
+        } else if (_diagnosticFrameCount % 30 == 0) {
+          debugPrint(
+            '[DIAGNOSTIC] FlutterCameraService: CameraImage frame #$_diagnosticFrameCount received',
+          );
+        }
+
+        debugPrint(
+          '[DIAGNOSTIC] FlutterCameraService: camera callback invoked BEFORE _imageStreamController.add. '
+          'frame=#$_diagnosticFrameCount, hasListener=${_imageStreamController.hasListener}, '
+          'isClosed=${_imageStreamController.isClosed}',
+        );
+
         if (!_imageStreamController.isClosed) {
           _imageStreamController.add(image);
         }
       });
       _isStreaming = true;
-    } on CameraException {
+      debugPrint('[DIAGNOSTIC] FlutterCameraService: _controller!.startImageStream() succeeded');
+    } on CameraException catch (e) {
+      debugPrint('[DIAGNOSTIC] FlutterCameraService: _controller!.startImageStream() failed: $e');
       rethrow;
     }
   }

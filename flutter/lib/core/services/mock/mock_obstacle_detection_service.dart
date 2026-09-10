@@ -29,6 +29,10 @@ class MockObstacleDetectionService implements ObstacleDetectionService {
   Stream<DetectionLog> get detections => _controller.stream;
 
   @override
+  Stream<List<DetectionLog>> get batchDetections =>
+      _controller.stream.map((d) => [d]);
+
+  @override
   void start() {
     _index = -1;
     _emitNext();

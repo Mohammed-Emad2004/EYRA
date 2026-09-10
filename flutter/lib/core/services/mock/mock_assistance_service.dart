@@ -11,18 +11,19 @@ import '../assistance_service.dart';
 /// backend implementation later without touching the controller or the
 /// Live Assistance screen.
 class MockAssistanceService implements AssistanceService {
+  MockAssistanceService({String userId = 'mock-user'}) : _userId = userId;
+
+  final String _userId;
   AssistanceSession? _current;
   int _sessionCounter = 0;
 
   @override
-  Future<AssistanceSession> startSession({
-    required String userId,
-  }) async {
+  Future<AssistanceSession> startSession() async {
     await Future.delayed(const Duration(milliseconds: 200));
     _sessionCounter++;
     final session = AssistanceSession(
       sessionId: 'mock-session-$_sessionCounter',
-      userId: userId,
+      userId: _userId,
       startedAt: DateTime.now(),
     );
     _current = session;

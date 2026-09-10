@@ -43,10 +43,23 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _cameraController = context.read<EyraCameraController>();
+      debugPrint(
+        '[DIAGNOSTIC] LiveAssistanceScreen: read EyraCameraController(id: ${identityHashCode(_cameraController)}), '
+        'CameraService(id: ${identityHashCode(_cameraController?.service)}), '
+        'stream(id: ${identityHashCode(_cameraController?.imageStream)})',
+      );
+      debugPrint('[DIAGNOSTIC] LiveAssistanceScreen: calling initialize()');
       _cameraController!.initialize().then((_) {
         if (!mounted) return;
+        debugPrint(
+          '[DIAGNOSTIC] LiveAssistanceScreen: initialize() completed. '
+          'isReady=${_cameraController!.isReady}, state=${_cameraController!.state}',
+        );
         if (_cameraController!.isReady) {
+          debugPrint('[DIAGNOSTIC] LiveAssistanceScreen: calling startImageStream()');
           _cameraController!.startImageStream();
+        } else {
+          debugPrint('[DIAGNOSTIC] LiveAssistanceScreen: NOT calling startImageStream (isReady=false)');
         }
       });
     });
@@ -71,6 +84,7 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
   @override
   Widget build(BuildContext context) {
     final assistance = context.watch<AssistanceController>();
+    final obstacles = assistance.latestObstacles;
     final obstacle = assistance.latestObstacle;
     final cameraState = context.watch<EyraCameraController>();
     final cs = Theme.of(context).colorScheme;
@@ -127,6 +141,7 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
                       const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: _CameraWithOverlay(
                     cameraState: cameraState,
+                    obstacles: obstacles,
                     obstacle: obstacle,
                   ),
                 ),
@@ -137,9 +152,22 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (obstacle != null) ...[
-                      ObstacleCard(obstacle: obstacle),
-                      const SizedBox(height: AppSpacing.lg),
+                    if (obstacles.isNotEmpty) ...[
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.28,
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: obstacles.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: AppSpacing.xs),
+                          itemBuilder: (context, index) =>
+                              ObstacleCard(obstacle: obstacles[index]),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
                     ],
                     EyraPrimaryButton(
                       label: context.tr('stopAssistance'),
@@ -160,13 +188,18 @@ class _LiveAssistanceScreenState extends State<LiveAssistanceScreen>
   }
 }
 
-/// Stacks the real camera preview with the mock obstacle direction
+/// Stacks the real camera preview with the obstacle direction
 /// overlay on top.
 class _CameraWithOverlay extends StatelessWidget {
   final EyraCameraController cameraState;
   final Obstacle? obstacle;
+  final List<Obstacle> obstacles;
 
-  const _CameraWithOverlay({required this.cameraState, this.obstacle});
+  const _CameraWithOverlay({
+    required this.cameraState,
+    this.obstacle,
+    this.obstacles = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -237,8 +270,11 @@ class _CameraWithOverlay extends StatelessWidget {
 
   Widget _buildOverlay(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final currentObstacle = obstacle;
-    if (currentObstacle == null) {
+    final list = obstacles.isNotEmpty
+        ? obstacles
+        : (obstacle != null ? [obstacle!] : const <Obstacle>[]);
+
+    if (list.isEmpty) {
       return Positioned(
         bottom: AppSpacing.sm,
         left: 0,
@@ -267,8 +303,8 @@ class _CameraWithOverlay extends StatelessWidget {
 
     return Positioned(
       bottom: AppSpacing.sm,
-      left: 0,
-      right: 0,
+      left: AppSpacing.sm,
+      right: AppSpacing.sm,
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(
@@ -276,24 +312,30 @@ class _CameraWithOverlay extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: 0.7),
+            color: cs.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(AppRadius.sm),
             border: Border.all(color: cs.secondary.withValues(alpha: 0.5)),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_iconFor(currentObstacle.label),
-                  color: cs.secondary, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                '${currentObstacle.label} - ${currentObstacle.direction.label} - ${currentObstacle.distance.label}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurface),
-              ),
-            ],
+          child: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xxs,
+            alignment: WrapAlignment.center,
+            children: list.map((obs) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_iconFor(obs.label), color: cs.secondary, size: 20),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '${obs.label} - ${obs.direction.label} - ${obs.distance.label}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: cs.onSurface),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ),

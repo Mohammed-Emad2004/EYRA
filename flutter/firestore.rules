@@ -22,38 +22,34 @@ service cloud.firestore {
 
     match /users/{userId} {
 
-      // A user can access only their own user document.
       allow read: if isOwner(userId);
 
-      // User document is created after Firebase Authentication signup.
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasAll([
           'email',
-          'createdAt',
-          'updatedAt'
+          'created_at',
+          'updated_at'
         ])
         && request.resource.data.keys().hasOnly([
           'email',
-          'createdAt',
-          'updatedAt'
+          'created_at',
+          'updated_at'
         ])
         && request.resource.data.email is string
         && request.resource.data.email.size() > 0
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.updatedAt is timestamp;
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
 
-      // Users may update their email and updatedAt,
-      // but cannot modify createdAt.
       allow update: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
           'email',
-          'createdAt',
-          'updatedAt'
+          'created_at',
+          'updated_at'
         ])
         && request.resource.data.email is string
         && request.resource.data.email.size() > 0
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.updatedAt is timestamp;
+        && request.resource.data.created_at == resource.data.created_at
+        && request.resource.data.updated_at is timestamp;
 
       allow delete: if isOwner(userId);
 
@@ -69,25 +65,25 @@ service cloud.firestore {
         allow create: if isOwner(userId)
           && documentId == 'profile'
           && request.resource.data.keys().hasAll([
-            'voiceAlerts',
-            'alertFrequency',
+            'voice_alerts',
+            'alert_frequency',
             'language',
-            'highContrast',
-            'largeText',
-            'hapticFeedback',
-            'updatedAt'
+            'high_contrast',
+            'large_text',
+            'haptic_feedback',
+            'updated_at'
           ])
           && request.resource.data.keys().hasOnly([
-            'voiceAlerts',
-            'alertFrequency',
+            'voice_alerts',
+            'alert_frequency',
             'language',
-            'highContrast',
-            'largeText',
-            'hapticFeedback',
-            'updatedAt'
+            'high_contrast',
+            'large_text',
+            'haptic_feedback',
+            'updated_at'
           ])
-          && request.resource.data.voiceAlerts is bool
-          && request.resource.data.alertFrequency in [
+          && request.resource.data.voice_alerts is bool
+          && request.resource.data.alert_frequency in [
             'low',
             'normal',
             'high'
@@ -96,24 +92,24 @@ service cloud.firestore {
             'en',
             'ar'
           ]
-          && request.resource.data.highContrast is bool
-          && request.resource.data.largeText is bool
-          && request.resource.data.hapticFeedback is bool
-          && request.resource.data.updatedAt is timestamp;
+          && request.resource.data.high_contrast is bool
+          && request.resource.data.large_text is bool
+          && request.resource.data.haptic_feedback is bool
+          && request.resource.data.updated_at is timestamp;
 
         allow update: if isOwner(userId)
           && documentId == 'profile'
           && request.resource.data.keys().hasOnly([
-            'voiceAlerts',
-            'alertFrequency',
+            'voice_alerts',
+            'alert_frequency',
             'language',
-            'highContrast',
-            'largeText',
-            'hapticFeedback',
-            'updatedAt'
+            'high_contrast',
+            'large_text',
+            'haptic_feedback',
+            'updated_at'
           ])
-          && request.resource.data.voiceAlerts is bool
-          && request.resource.data.alertFrequency in [
+          && request.resource.data.voice_alerts is bool
+          && request.resource.data.alert_frequency in [
             'low',
             'normal',
             'high'
@@ -122,10 +118,10 @@ service cloud.firestore {
             'en',
             'ar'
           ]
-          && request.resource.data.highContrast is bool
-          && request.resource.data.largeText is bool
-          && request.resource.data.hapticFeedback is bool
-          && request.resource.data.updatedAt is timestamp;
+          && request.resource.data.high_contrast is bool
+          && request.resource.data.large_text is bool
+          && request.resource.data.haptic_feedback is bool
+          && request.resource.data.updated_at is timestamp;
 
         allow delete: if isOwner(userId);
       }
@@ -141,47 +137,46 @@ service cloud.firestore {
 
         allow create, update: if isOwner(userId)
           && request.resource.data.keys().hasAll([
-            'deviceName',
-            'deviceKey',
-            'connectionStatus',
-            'batteryPercentage',
-            'lastTestedAt',
-            'updatedAt'
+            'device_name',
+            'device_key',
+            'connection_status',
+            'battery_percentage',
+            'last_tested_at',
+            'updated_at'
           ])
           && request.resource.data.keys().hasOnly([
-            'deviceName',
-            'deviceKey',
-            'connectionStatus',
-            'batteryPercentage',
-            'lastTestedAt',
-            'updatedAt'
+            'device_name',
+            'device_key',
+            'connection_status',
+            'battery_percentage',
+            'last_tested_at',
+            'updated_at'
           ])
-          && request.resource.data.deviceName is string
-          && request.resource.data.deviceName.size() > 0
-          && request.resource.data.deviceKey in [
+          && request.resource.data.device_name is string
+          && request.resource.data.device_name.size() > 0
+          && request.resource.data.device_key in [
             'smart_glasses',
             'esp32_s3',
             'camera',
-            'bluetooth_audio',
-            'phone'
+            'bluetooth_audio'
           ]
-          && request.resource.data.connectionStatus in [
+          && request.resource.data.connection_status in [
             'connected',
             'disconnected'
           ]
           && (
-            request.resource.data.batteryPercentage == null
+            request.resource.data.battery_percentage == null
             || (
-              request.resource.data.batteryPercentage is int
-              && request.resource.data.batteryPercentage >= 0
-              && request.resource.data.batteryPercentage <= 100
+              request.resource.data.battery_percentage is int
+              && request.resource.data.battery_percentage >= 0
+              && request.resource.data.battery_percentage <= 100
             )
           )
           && (
-            request.resource.data.lastTestedAt == null
-            || request.resource.data.lastTestedAt is timestamp
+            request.resource.data.last_tested_at == null
+            || request.resource.data.last_tested_at is timestamp
           )
-          && request.resource.data.updatedAt is timestamp;
+          && request.resource.data.updated_at is timestamp;
 
         allow delete: if isOwner(userId);
       }
@@ -197,52 +192,52 @@ service cloud.firestore {
 
         allow create: if isOwner(userId)
           && request.resource.data.keys().hasAll([
-            'sessionStatus',
-            'aiStatus',
-            'startedAt',
-            'endedAt'
+            'session_status',
+            'ai_status',
+            'started_at',
+            'ended_at'
           ])
           && request.resource.data.keys().hasOnly([
-            'sessionStatus',
-            'aiStatus',
-            'startedAt',
-            'endedAt'
+            'session_status',
+            'ai_status',
+            'started_at',
+            'ended_at'
           ])
-          && request.resource.data.sessionStatus in [
+          && request.resource.data.session_status in [
             'active',
             'stopped'
           ]
-          && request.resource.data.aiStatus in [
+          && request.resource.data.ai_status in [
             'ready',
             'processing',
             'error'
           ]
-          && request.resource.data.startedAt is timestamp
+          && request.resource.data.started_at is timestamp
           && (
-            request.resource.data.endedAt == null
-            || request.resource.data.endedAt is timestamp
+            request.resource.data.ended_at == null
+            || request.resource.data.ended_at is timestamp
           );
 
         allow update: if isOwner(userId)
           && request.resource.data.keys().hasOnly([
-            'sessionStatus',
-            'aiStatus',
-            'startedAt',
-            'endedAt'
+            'session_status',
+            'ai_status',
+            'started_at',
+            'ended_at'
           ])
-          && request.resource.data.sessionStatus in [
+          && request.resource.data.session_status in [
             'active',
             'stopped'
           ]
-          && request.resource.data.aiStatus in [
+          && request.resource.data.ai_status in [
             'ready',
             'processing',
             'error'
           ]
-          && request.resource.data.startedAt == resource.data.startedAt
+          && request.resource.data.started_at == resource.data.started_at
           && (
-            request.resource.data.endedAt == null
-            || request.resource.data.endedAt is timestamp
+            request.resource.data.ended_at == null
+            || request.resource.data.ended_at is timestamp
           );
 
         allow delete: if isOwner(userId);
@@ -258,56 +253,56 @@ service cloud.firestore {
 
           allow create: if isOwner(userId)
             && request.resource.data.keys().hasAll([
-              'detectedLabel',
-              'spatialDirection',
-              'dangerLevel',
-              'audioSpokenText',
-              'createdAt'
+              'detected_label',
+              'spatial_direction',
+              'danger_level',
+              'audio_spoken_text',
+              'created_at'
             ])
             && request.resource.data.keys().hasOnly([
-              'detectedLabel',
-              'spatialDirection',
-              'dangerLevel',
-              'audioSpokenText',
-              'createdAt'
+              'detected_label',
+              'spatial_direction',
+              'danger_level',
+              'audio_spoken_text',
+              'created_at'
             ])
-            && request.resource.data.detectedLabel is string
-            && request.resource.data.detectedLabel.size() > 0
-            && request.resource.data.spatialDirection in [
+            && request.resource.data.detected_label is string
+            && request.resource.data.detected_label.size() > 0
+            && request.resource.data.spatial_direction in [
               'left',
               'center',
               'right'
             ]
-            && request.resource.data.dangerLevel in [
+            && request.resource.data.danger_level in [
               'low',
               'medium',
               'high'
             ]
-            && request.resource.data.audioSpokenText is string
-            && request.resource.data.audioSpokenText.size() > 0
-            && request.resource.data.createdAt is timestamp;
+            && request.resource.data.audio_spoken_text is string
+            && request.resource.data.audio_spoken_text.size() > 0
+            && request.resource.data.created_at is timestamp;
 
           allow update: if isOwner(userId)
             && request.resource.data.keys().hasOnly([
-              'detectedLabel',
-              'spatialDirection',
-              'dangerLevel',
-              'audioSpokenText',
-              'createdAt'
+              'detected_label',
+              'spatial_direction',
+              'danger_level',
+              'audio_spoken_text',
+              'created_at'
             ])
-            && request.resource.data.createdAt == resource.data.createdAt
-            && request.resource.data.detectedLabel is string
-            && request.resource.data.spatialDirection in [
+            && request.resource.data.created_at == resource.data.created_at
+            && request.resource.data.detected_label is string
+            && request.resource.data.spatial_direction in [
               'left',
               'center',
               'right'
             ]
-            && request.resource.data.dangerLevel in [
+            && request.resource.data.danger_level in [
               'low',
               'medium',
               'high'
             ]
-            && request.resource.data.audioSpokenText is string;
+            && request.resource.data.audio_spoken_text is string;
 
           allow delete: if isOwner(userId);
         }
@@ -324,65 +319,65 @@ service cloud.firestore {
           allow create: if isOwner(userId)
             && request.resource.data.keys().hasAll([
               'fps',
-              'inferenceLatencyMs',
-              'cpuUsagePct',
-              'ramUsageMb',
-              'recordedAt'
+              'inference_latency_ms',
+              'cpu_usage_pct',
+              'ram_usage_mb',
+              'recorded_at'
             ])
             && request.resource.data.keys().hasOnly([
               'fps',
-              'inferenceLatencyMs',
-              'cpuUsagePct',
-              'ramUsageMb',
-              'recordedAt'
+              'inference_latency_ms',
+              'cpu_usage_pct',
+              'ram_usage_mb',
+              'recorded_at'
             ])
             && request.resource.data.fps is number
             && request.resource.data.fps >= 0
-            && request.resource.data.inferenceLatencyMs is number
-            && request.resource.data.inferenceLatencyMs >= 0
+            && request.resource.data.inference_latency_ms is number
+            && request.resource.data.inference_latency_ms >= 0
             && (
-              request.resource.data.cpuUsagePct == null
+              request.resource.data.cpu_usage_pct == null
               || (
-                request.resource.data.cpuUsagePct is number
-                && request.resource.data.cpuUsagePct >= 0
-                && request.resource.data.cpuUsagePct <= 100
+                request.resource.data.cpu_usage_pct is number
+                && request.resource.data.cpu_usage_pct >= 0
+                && request.resource.data.cpu_usage_pct <= 100
               )
             )
             && (
-              request.resource.data.ramUsageMb == null
+              request.resource.data.ram_usage_mb == null
               || (
-                request.resource.data.ramUsageMb is number
-                && request.resource.data.ramUsageMb >= 0
+                request.resource.data.ram_usage_mb is number
+                && request.resource.data.ram_usage_mb >= 0
               )
             )
-            && request.resource.data.recordedAt is timestamp;
+            && request.resource.data.recorded_at is timestamp;
 
           allow update: if isOwner(userId)
             && request.resource.data.keys().hasOnly([
               'fps',
-              'inferenceLatencyMs',
-              'cpuUsagePct',
-              'ramUsageMb',
-              'recordedAt'
+              'inference_latency_ms',
+              'cpu_usage_pct',
+              'ram_usage_mb',
+              'recorded_at'
             ])
-            && request.resource.data.recordedAt == resource.data.recordedAt
+            && request.resource.data.recorded_at == resource.data.recorded_at
             && request.resource.data.fps is number
             && request.resource.data.fps >= 0
-            && request.resource.data.inferenceLatencyMs is number
-            && request.resource.data.inferenceLatencyMs >= 0
+            && request.resource.data.inference_latency_ms is number
+            && request.resource.data.inference_latency_ms >= 0
             && (
-              request.resource.data.cpuUsagePct == null
+              request.resource.data.cpu_usage_pct == null
               || (
-                request.resource.data.cpuUsagePct is number
-                && request.resource.data.cpuUsagePct >= 0
-                && request.resource.data.cpuUsagePct <= 100
+                request.resource.data.cpu_usage_pct is number
+                && request.resource.data.cpu_usage_pct >= 0
+                && request.resource.data.cpu_usage_pct <= 100
               )
             )
             && (
-              request.resource.data.ramUsageMb == null
+              request.resource.data.ram_usage_mb == null
               || (
-                request.resource.data.ramUsageMb is number
-                && request.resource.data.ramUsageMb >= 0
+                request.resource.data.ram_usage_mb is number
+                && request.resource.data.ram_usage_mb >= 0
               )
             );
 

@@ -136,7 +136,7 @@ class AssistanceSession {
       sessionStatus:
           SessionStatusValue.fromValue(data['session_status'] as String?),
       aiStatus: AiStatusValue.fromValue(data['ai_status'] as String?),
-      startedAt: (data['started_at'] as Timestamp).toDate(),
+      startedAt: (data['started_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       endedAt: (data['ended_at'] as Timestamp?)?.toDate(),
     );
   }

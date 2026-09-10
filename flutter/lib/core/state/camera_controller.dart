@@ -51,6 +51,9 @@ class EyraCameraController extends ChangeNotifier {
 
   final CameraService _service;
 
+  /// Diagnostic access to the underlying camera service.
+  CameraService get service => _service;
+
   CameraState _state = CameraState.uninitialized;
   String? _errorMessage;
   bool _isStreaming = false;
@@ -92,7 +95,15 @@ class EyraCameraController extends ChangeNotifier {
   /// are no-ops if already initialized or currently initializing.
   /// After this completes, the camera is ready for [CameraPreview].
   Future<void> initialize() async {
+    debugPrint(
+      '[DIAGNOSTIC] EyraCameraController.initialize() CALLED '
+      '(controller=${identityHashCode(this)}, service=${identityHashCode(_service)}, '
+      'currentState=$_state)',
+    );
     if (_state == CameraState.ready || _state == CameraState.initializing) {
+      debugPrint(
+        '[DIAGNOSTIC] EyraCameraController.initialize: already ready or initializing ($_state), early return',
+      );
       return;
     }
 
@@ -101,7 +112,11 @@ class EyraCameraController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('[DIAGNOSTIC] EyraCameraController.initialize: calling _service.initialize()');
       await _service.initialize();
+      debugPrint(
+        '[DIAGNOSTIC] EyraCameraController.initialize: _service.initialize() finished, isInitialized=${_service.isInitialized}',
+      );
 
       if (_service.isInitialized) {
         _state = CameraState.ready;
@@ -112,10 +127,12 @@ class EyraCameraController extends ChangeNotifier {
     } on camera.CameraException catch (e) {
       _state = _stateFromError(e);
       _errorMessage = e.description;
+      debugPrint('[DIAGNOSTIC] EyraCameraController: init CameraException [${e.code}] - ${e.description}');
       log('EyraCameraController: init error [${e.code}] - ${e.description}');
     } catch (e) {
       _state = CameraState.error;
       _errorMessage = 'Unexpected camera error: $e';
+      debugPrint('[DIAGNOSTIC] EyraCameraController: unexpected init error - $e');
       log('EyraCameraController: unexpected init error - $e');
     }
 
@@ -126,18 +143,33 @@ class EyraCameraController extends ChangeNotifier {
   /// [initialize] is called first. Safe to call if already streaming
   /// (idempotent).
   Future<void> startImageStream() async {
+    debugPrint(
+      '[DIAGNOSTIC] EyraCameraController.startImageStream() CALLED '
+      '(controller=${identityHashCode(this)}, service=${identityHashCode(_service)}, '
+      'isStreaming=$_isStreaming, state=$_state)',
+    );
     if (_state != CameraState.ready) {
+      debugPrint('[DIAGNOSTIC] EyraCameraController.startImageStream: state != ready, calling initialize()');
       await initialize();
-      if (_state != CameraState.ready) return;
+      if (_state != CameraState.ready) {
+        debugPrint('[DIAGNOSTIC] EyraCameraController.startImageStream: still not ready after initialize, aborting');
+        return;
+      }
     }
 
-    if (_isStreaming) return;
+    if (_isStreaming) {
+      debugPrint('[DIAGNOSTIC] EyraCameraController.startImageStream: already streaming, early return');
+      return;
+    }
 
     try {
+      debugPrint('[DIAGNOSTIC] EyraCameraController.startImageStream: calling _service.startImageStream()');
       await _service.startImageStream();
       _isStreaming = true;
+      debugPrint('[DIAGNOSTIC] EyraCameraController.startImageStream: _service.startImageStream() completed successfully');
       notifyListeners();
     } on camera.CameraException catch (e) {
+      debugPrint('[DIAGNOSTIC] EyraCameraController: startImageStream CameraException [${e.code}] - ${e.description}');
       log('EyraCameraController: startImageStream error [${e.code}] - ${e.description}');
     }
   }

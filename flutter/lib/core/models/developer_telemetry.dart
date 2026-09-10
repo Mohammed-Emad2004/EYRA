@@ -3,53 +3,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Domain model for developer/diagnostic telemetry, shown on the
 /// Developer Monitor screen.
 ///
-/// Maps to the `developer_telemetry` table in the backend ERD.
+/// Maps to the `developer_telemetry` table in the SQL schema.
 ///
-/// AMBIGUOUS SCHEMA NOTE: the ERD shows TWO telemetry-shaped boxes - a
-/// clearer one titled "developer_telemetry" (bottom-left) whose columns
-/// match the product's telemetry concepts (OCR language, speech
-/// rate/pitch/volume, TTS voice gender, haptic %, usage %, dropped
-/// scans, network latency), and a second, heavily garbled box titled
-/// "Developer Telemetry" (bottom-right) whose legible columns
-/// (contact_name, relationship, phone_number) look like they were
-/// copied from the Emergency Contact table rather than genuine telemetry
-/// fields. This model is built from the clearer "developer_telemetry"
-/// box; the second box's content is treated as unreliable/likely a
-/// rendering artifact and is NOT represented here - see architecture
-/// notes, requires confirmation.
-///
-/// A second ambiguity: the clearer box's primary key is `user_id`
-/// (suggesting one row per user), while the product/task description
-/// implies telemetry should be recorded per assistance session (with
-/// its own `telemetry_id` and `session_id`). This model keeps both an
-/// optional [id]/[sessionId] (for a future per-session grain) and a
-/// required [userId] (matching what is actually legible in the ERD),
-/// pending confirmation of the real primary key/grain.
-///
-/// Database mapping (see ERD `developer_telemetry` table):
-/// - `user_id`               -> [userId]
-/// - (timestamp column)      -> [recordedAt]. AMBIGUOUS: rendered as
-///   "telemetrd_at" - read as a recorded-at timestamp.
-/// - `ocr_language`          -> [ocrLanguage]. ENUM values not legible.
-/// - `speech_rate`           -> [speechRate]
-/// - (pitch column)          -> [speechPitch]. Rendered as "speech_nitch"
-///   - read as "speech_pitch".
-/// - `speech_volume`         -> [speechVolume]
-/// - `tts_voice_gender`      -> [ttsVoiceGender]. ENUM values not legible.
-/// - (haptic % column)       -> [hapticPercentage]. Rendered as
-///   "haptic_perconntage" - read as "haptic_percentage".
-/// - (usage % column)        -> [usagePercentage]. Rendered as
-///   "usag_percentage" - read as "usage_percentage".
-/// - (dropped scans column)  -> [droppedScans]. Rendered as
-///   "droped_cans" - read as "dropped_scans".
-/// - `network_latency`       -> [networkLatencyMs]
-///
-/// App-local fields (current Developer Monitor screen, not present in
-/// the ERD's `developer_telemetry` table): [fps], [inferenceMs],
-/// [totalLatencyMs], [modelName]. These back the existing performance
-/// tile grid and are kept so existing product behavior is not removed;
-/// if the backend later adds matching columns, they can be wired
-/// directly.
+/// Database mapping (`developer_telemetry` table):
+/// - `telemetry_id`       -> [telemetryId]
+/// - `session_id`         -> [sessionId]
+/// - `fps`                -> [fps]
+/// - `inference_latency_ms` -> [inferenceLatencyMs]
+/// - `cpu_usage_pct`      -> [cpuUsagePct]
+/// - `ram_usage_mb`       -> [ramUsageMb]
+/// - `recorded_at`        -> [recordedAt]
 class DeveloperTelemetry {
   final String telemetryId;
   final String sessionId;
@@ -90,4 +53,35 @@ class DeveloperTelemetry {
         'ram_usage_mb': ramUsageMb,
         'recorded_at': recordedAt.toIso8601String(),
       };
+
+  /// Serializes for Firestore `.../developer_telemetry/{telemetryId}`.
+  /// Omits `telemetryId`, `sessionId` (path expresses relationship).
+  Map<String, dynamic> toFirestore() {
+    return {
+      'fps': fps,
+      'inference_latency_ms': inferenceLatencyMs,
+      'cpu_usage_pct': cpuUsagePct,
+      'ram_usage_mb': ramUsageMb,
+      'recorded_at': Timestamp.fromDate(recordedAt),
+    };
+  }
+
+  /// Deserializes from a Firestore developer_telemetry document.
+  /// `telemetryId` comes from [doc.id]. `sessionId` is not stored in the
+  /// document body — pass it via [sessionId] from the parent path.
+  factory DeveloperTelemetry.fromFirestore(
+    DocumentSnapshot doc, {
+    required String sessionId,
+  }) {
+    final data = doc.data() as Map<String, dynamic>;
+    return DeveloperTelemetry(
+      telemetryId: doc.id,
+      sessionId: sessionId,
+      fps: (data['fps'] as num?)?.toDouble() ?? 0,
+      inferenceLatencyMs: (data['inference_latency_ms'] as num?)?.toInt() ?? 0,
+      cpuUsagePct: (data['cpu_usage_pct'] as num?)?.toDouble() ?? 0,
+      ramUsageMb: (data['ram_usage_mb'] as num?)?.toDouble() ?? 0,
+      recordedAt: (data['recorded_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
 }
