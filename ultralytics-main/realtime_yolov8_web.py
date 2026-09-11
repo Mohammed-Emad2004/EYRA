@@ -2,6 +2,7 @@
 Ultralytics YOLOv8 Ultra High-FPS Web Application (Flask + Ultra-Fast Client-side Canvas Rendering)
 """
 
+import os
 import sys
 import time
 import base64
@@ -610,6 +611,10 @@ HTML_TEMPLATE = """
 </html>
 """
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
@@ -685,8 +690,9 @@ def detect():
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
     print("\n========================================================")
     print(" ⚡ Launching Ultralytics YOLOv8 Ultra High-FPS Web Engine")
-    print(" Server: http://localhost:5000")
+    print(f" Server: http://localhost:{port}")
     print("========================================================\n")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
