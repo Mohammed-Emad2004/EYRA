@@ -15,10 +15,8 @@
 class AiConfig {
   AiConfig._();
 
-  // TODO(dev): Confirm this is still your PC's LAN IP before each session.
-  // Updated via ipconfig on 2026-09-10: 192.168.1.11 (was 100.100.100.46)
-  static const String aiBaseUrl = 'http://100.100.100.46:5000';
+  static const String aiBaseUrl = 'https://eyra-rf7w.onrender.com';
 
   static const String detectEndpoint = '/api/detect';
-  static const Duration requestTimeout = Duration(seconds: 10);
+  static const Duration requestTimeout = Duration(seconds: 120);
 }
